@@ -12,7 +12,8 @@ and does not send selected text or cues to a server.
 
 ## Features
 
-- Reads only text the user explicitly selects, with visible chunk progress.
+- Reads only text the user explicitly selects, with visible and screen-reader
+  chunk progress; reading can pause, resume, or stop.
 - Stores a private per-site pronunciation glossary in extension-local storage.
 - Adds, previews, edits, and deletes cues; warns that IPA realization is
   voice-engine dependent.

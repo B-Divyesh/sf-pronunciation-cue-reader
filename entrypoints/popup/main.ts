@@ -6,7 +6,7 @@ import type { Cue, LicenseCache, ReaderChunk } from '../../src/lib/types';
 
 type PendingSelection = { text: string; url: string; capturedAt: number; openCueForm?: boolean };
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
-const state = { cues: [] as Cue[], site: 'this page', text: '', chunks: [] as ReaderChunk[], chunkIndex: -1, reading: false, voices: [] as SpeechSynthesisVoice[], plus: false };
+const state = { cues: [] as Cue[], site: 'this page', text: '', chunks: [] as ReaderChunk[], chunkIndex: -1, reading: false, paused: false, voices: [] as SpeechSynthesisVoice[], plus: false };
 
 async function storageGet<T>(key: string): Promise<T | undefined> {
   return (await chrome.storage.local.get(key))[key] as T | undefined;
@@ -59,8 +59,12 @@ function renderReader(): void {
 
 function setCurrentChunk(index: number): void {
   document.querySelectorAll<HTMLElement>('.chunk').forEach((item, itemIndex) => {
-    item.classList.toggle('current', itemIndex === index);
-    item.toggleAttribute('aria-current', itemIndex === index);
+    const isCurrent = itemIndex === index;
+    item.classList.toggle('current', isCurrent);
+    // An empty boolean attribute is not a valid ARIA current-item value. Keep
+    // the visual lozenge and the accessibility-tree state in lockstep.
+    if (isCurrent) item.setAttribute('aria-current', 'true');
+    else item.removeAttribute('aria-current');
   });
   state.chunkIndex = index;
 }
@@ -76,13 +80,14 @@ function speakText(text: string, onEnd?: () => void): void {
   if (voice) utterance.voice = voice;
   utterance.rate = 0.92;
   utterance.onend = () => onEnd?.();
-  utterance.onerror = () => { state.reading = false; updateReadingControls(); showToast('The installed voice could not read that text. Try another voice.'); };
+  utterance.onerror = () => { state.reading = false; state.paused = false; setCurrentChunk(-1); updateReadingControls(); showToast('The installed voice could not read that text. Try another voice.'); };
   speechSynthesis.speak(utterance);
 }
 
 function readChunk(index: number): void {
   if (!state.reading || index >= state.chunks.length) {
     state.reading = false;
+    state.paused = false;
     setCurrentChunk(-1);
     updateReadingControls();
     return;
@@ -95,7 +100,7 @@ function readChunk(index: number): void {
 
 function updateReadingControls(): void {
   const button = $<HTMLButtonElement>('read-button');
-  button.querySelector('span')!.textContent = state.reading ? 'Pause' : 'Read aloud';
+  button.querySelector('span')!.textContent = state.paused ? 'Resume' : state.reading ? 'Pause' : 'Read aloud';
   ($<HTMLButtonElement>('stop-button')).disabled = !state.reading && state.chunkIndex < 0;
 }
 
@@ -202,8 +207,24 @@ async function init(): Promise<void> {
 }
 
 $('retry-selection').addEventListener('click', async () => { const result = await loadPageSelection(); if (result?.text) { state.text = result.text; state.site = normalizeSite(result.url); $('site-pill').textContent = state.site; renderReader(); renderCues(); } else showToast('No selected text found yet.'); });
-$('read-button').addEventListener('click', () => { if (state.reading) { state.reading = false; speechSynthesis.cancel(); updateReadingControls(); return; } state.reading = true; updateReadingControls(); readChunk(Math.max(0, state.chunkIndex)); });
-$('stop-button').addEventListener('click', () => { state.reading = false; speechSynthesis.cancel(); setCurrentChunk(-1); updateReadingControls(); });
+$('read-button').addEventListener('click', () => {
+  if (state.reading) {
+    if (state.paused) {
+      speechSynthesis.resume();
+      state.paused = false;
+    } else {
+      speechSynthesis.pause();
+      state.paused = true;
+    }
+    updateReadingControls();
+    return;
+  }
+  state.reading = true;
+  state.paused = false;
+  updateReadingControls();
+  readChunk(Math.max(0, state.chunkIndex));
+});
+$('stop-button').addEventListener('click', () => { state.reading = false; state.paused = false; speechSynthesis.cancel(); setCurrentChunk(-1); updateReadingControls(); });
 $('new-cue').addEventListener('click', () => openCueForm());
 $('use-first-word').addEventListener('click', () => openCueForm());
 $('cancel-cue').addEventListener('click', () => { ($<HTMLFormElement>('cue-form')).hidden = true; });
