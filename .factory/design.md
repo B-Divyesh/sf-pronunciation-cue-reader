@@ -26,7 +26,8 @@ Light is the primary treatment; dark follows the reader's system preference.
 | Danger | `#A72D36` | `#FF8991` | destructive/error |
 
 Ink/paper combinations exceed WCAG AA. Accent fills use ink-colored copy where
-required; color is always paired with text, shape, or iconography.
+required; the dark cobalt text badge uses dark paper ink rather than white so it
+keeps AA contrast. Color is always paired with text, shape, or iconography.
 
 ## Type
 

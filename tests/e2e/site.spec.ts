@@ -2,18 +2,26 @@ import { test, expect } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { readFileSync } from 'node:fs';
 
-test('landing page is usable and has no serious accessibility violations', async ({ page }) => {
-  const consoleErrors: string[] = [];
-  page.on('console', (message) => { if (message.type() === 'error') consoleErrors.push(message.text()); });
-  await page.goto('/');
-  await expect(page).toHaveTitle(/Say It Right/);
-  await expect(page.locator('main')).toBeVisible();
-  await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
-  await expect(page.getByRole('link', { name: 'Download for Chrome' })).toHaveAttribute('href', '/downloads/say-it-right.zip');
-  const results = await new AxeBuilder({ page }).analyze();
-  expect(results.violations.filter((violation) => ['serious', 'critical'].includes(violation.impact ?? ''))).toEqual([]);
-  expect(consoleErrors).toEqual([]);
-});
+for (const colorScheme of ['light', 'dark'] as const) {
+  test(`landing page is usable and has no serious accessibility violations in ${colorScheme} mode`, async ({ page }) => {
+    const consoleErrors: string[] = [];
+    page.on('console', (message) => {
+      if (message.type() === 'error') consoleErrors.push(message.text());
+    });
+    await page.emulateMedia({ colorScheme });
+    await page.goto('/');
+    await expect(page).toHaveTitle(/Say It Right/);
+    await expect(page.locator('main')).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1 })).toHaveCount(1);
+    await expect(page.locator('#how-title')).toBeVisible();
+    await expect(page.locator('.steps h3')).toHaveCount(3);
+    await expect(page.locator('.line-icon').first()).toHaveText('Aa');
+    await expect(page.getByRole('link', { name: 'Download for Chrome' })).toHaveAttribute('href', '/downloads/say-it-right.zip');
+    const results = await new AxeBuilder({ page }).analyze();
+    expect(results.violations.filter((violation) => ['serious', 'critical'].includes(violation.impact ?? ''))).toEqual([]);
+    expect(consoleErrors).toEqual([]);
+  });
+}
 
 test('legal pages are present and linked', async ({ page }) => {
   await page.goto('/privacy/');
@@ -60,7 +68,12 @@ test('keeps visible mobile navigation and footer targets at least 44px', async (
     expect((await locator.boundingBox())?.height).toBeGreaterThanOrEqual(44);
   }
   await page.locator('footer').scrollIntoViewIfNeeded();
-  for (const locator of [page.locator('.site-footer .logo'), page.getByRole('link', { name: 'Privacy' }).last(), page.getByRole('link', { name: 'Terms' }).last(), page.getByRole('link', { name: 'Source' })]) {
+  for (const locator of [
+    page.locator('.site-footer .logo'),
+    page.getByRole('link', { name: 'Privacy' }).last(),
+    page.getByRole('link', { name: 'Terms' }).last(),
+    page.getByRole('link', { name: 'Source' }),
+  ]) {
     await expect(locator).toBeVisible();
     expect((await locator.boundingBox())?.height).toBeGreaterThanOrEqual(44);
   }
