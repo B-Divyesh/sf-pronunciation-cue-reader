@@ -28,11 +28,12 @@ and does not send selected text or cues to a server.
 Requirements: Node.js 20+, npm, and a Chromium browser.
 
 ```bash
-npm install
+npm ci
 npm run dev          # WXT extension dev mode
 npm run dev:site     # landing site at http://localhost:5173
 npm test             # unit tests
 npm run typecheck
+npm run lint
 npm run test:e2e     # desktop + 390px accessibility/browser tests
 npm run build
 ```
@@ -46,6 +47,10 @@ npm run build
 The static deploy root is `dist/site`. No environment variables are required to
 build. The factory registers billing products separately; the client uses the
 slug-based Sociobot checkout and verification endpoints.
+
+The deployment build command is `npm ci && npm test && npm run build:site`.
+`build:site` deliberately also builds and packages the extension, so the
+deployable directory always contains the ZIP linked by the landing page.
 
 ## Load the extension locally
 

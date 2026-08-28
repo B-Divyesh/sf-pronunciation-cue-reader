@@ -6,11 +6,12 @@
   "scripts": {
     "dev": "wxt",
     "dev:site": "vite --config site.vite.config.ts",
-    "test": "vitest run",
+    "test": "wxt prepare && vitest run",
     "test:e2e": "playwright test",
     "typecheck": "wxt prepare && tsc --noEmit",
+    "lint": "npm run typecheck",
     "build:extension": "wxt build",
-    "build:site": "vite build --config site.vite.config.ts",
+    "build:site": "node scripts/build-site.mjs",
     "build": "node scripts/build.mjs"
   },
   "devDependencies": {

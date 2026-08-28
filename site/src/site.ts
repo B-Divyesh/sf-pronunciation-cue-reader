@@ -1,4 +1,5 @@
 import { LICENSE_KEY, LICENSE_CACHE_KEY, verifyLicense } from '../../src/lib/license';
+import './touch-targets.css';
 
 const input = document.getElementById('site-license') as HTMLInputElement | null;
 const status = document.getElementById('license-status');

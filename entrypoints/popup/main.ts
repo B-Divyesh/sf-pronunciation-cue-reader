@@ -1,5 +1,6 @@
 import './style.css';
-import { activeCues, createChunks, cueId, FREE_CUE_LIMIT, normalizeSite, parseCueImport, validateCue } from '../../src/lib/glossary';
+import './touch-targets.css';
+import { activeCues, createChunks, cueId, FREE_CUE_LIMIT, mergeImportedCues, normalizeSite, parseCueImport, validateCue } from '../../src/lib/glossary';
 import { LICENSE_CACHE_KEY, LICENSE_KEY, recentValidLicense, verifyLicense } from '../../src/lib/license';
 import type { Cue, LicenseCache, ReaderChunk } from '../../src/lib/types';
 
@@ -209,7 +210,23 @@ $('cancel-cue').addEventListener('click', () => { ($<HTMLFormElement>('cue-form'
 $('cue-form').addEventListener('submit', (event) => void saveCue(event as SubmitEvent));
 $('preview-cue').addEventListener('click', () => { const value = ($<HTMLInputElement>('say-as')).value.trim(); value ? speakText(value) : ($('cue-error').textContent = 'Enter how the term should sound first.'); });
 $('export-button').addEventListener('click', () => { const blob = new Blob([JSON.stringify(state.cues, null, 2)], { type: 'application/json' }); const link = document.createElement('a'); link.href = URL.createObjectURL(blob); link.download = `say-it-right-cues-${new Date().toISOString().slice(0, 10)}.json`; link.click(); URL.revokeObjectURL(link.href); showToast('Glossary exported.'); });
-$<HTMLInputElement>('import-file').addEventListener('change', async (event) => { const file = (event.currentTarget as HTMLInputElement).files?.[0]; if (!file) return; try { const imported = parseCueImport(await file.text()); const byId = new Map([...state.cues, ...imported].map((cue) => [cue.id, cue])); state.cues = [...byId.values()]; await persistCues(); renderCues(); renderReader(); showToast(`${imported.length} cues imported.`); } catch (error) { showToast(error instanceof Error ? error.message : 'That backup could not be imported.'); } });
+$<HTMLInputElement>('import-file').addEventListener('change', async (event) => {
+  const file = (event.currentTarget as HTMLInputElement).files?.[0];
+  if (!file) return;
+  try {
+    const result = mergeImportedCues(state.cues, parseCueImport(await file.text()), state.plus);
+    state.cues = result.cues;
+    await persistCues();
+    renderCues();
+    renderReader();
+    const skipped: string[] = [];
+    if (result.skippedForPlusScope) skipped.push(`${result.skippedForPlusScope} every-site cue${result.skippedForPlusScope === 1 ? '' : 's'} requires Plus`);
+    if (result.skippedForLimit) skipped.push(`${result.skippedForLimit} cue${result.skippedForLimit === 1 ? '' : 's'} exceed${result.skippedForLimit === 1 ? 's' : ''} the ${FREE_CUE_LIMIT}-cue free limit`);
+    showToast(skipped.length ? `${result.imported} imported; ${skipped.join('; ')}.` : `${result.imported} cue${result.imported === 1 ? '' : 's'} imported.`);
+  } catch (error) {
+    showToast(error instanceof Error ? error.message : 'That backup could not be imported.');
+  }
+});
 $('license-button').addEventListener('click', async () => { const token = ($<HTMLInputElement>('license-input')).value.trim(); if (!token) { $('license-status').textContent = 'Paste your license token first.'; return; } $('license-status').textContent = 'Checking license…'; try { const verdict = await verifyLicense(token); await chrome.storage.local.set({ [LICENSE_KEY]: token, [LICENSE_CACHE_KEY]: verdict }); state.plus = verdict.valid; updatePlus(verdict); if (verdict.valid) ($<HTMLInputElement>('license-input')).value = ''; } catch { $('license-status').textContent = 'Could not verify right now. Check your connection and try again.'; } });
 window.addEventListener('unload', () => speechSynthesis.cancel());
 void init();

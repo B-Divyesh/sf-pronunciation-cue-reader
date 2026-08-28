@@ -1,0 +1,10 @@
+.logo {
+  min-height: 44px;
+}
+
+.site-header nav a,
+.site-footer nav a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}

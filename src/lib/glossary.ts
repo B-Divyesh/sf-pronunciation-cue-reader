@@ -2,6 +2,13 @@ import type { Cue, ReaderChunk } from './types';
 
 export const FREE_CUE_LIMIT = 20;
 
+export type ImportMergeResult = {
+  cues: Cue[];
+  imported: number;
+  skippedForLimit: number;
+  skippedForPlusScope: number;
+};
+
 export function normalizeSite(input: string): string {
   if (!input) return 'this page';
   try {
@@ -66,6 +73,8 @@ export function parseCueImport(value: string): Cue[] {
   return parsed.map((item) => {
     const cue = item as Partial<Cue>;
     if (!cue.term || !cue.sayAs || !cue.site) throw new Error('One or more cues are missing a term, spoken form, or site.');
+    const validationError = validateCue(cue.term, cue.sayAs);
+    if (validationError) throw new Error(`One or more cues are invalid: ${validationError}`);
     return {
       id: cue.id || cueId(cue.term, cue.site),
       term: cue.term,
@@ -76,4 +85,27 @@ export function parseCueImport(value: string): Cue[] {
       updatedAt: Date.now()
     };
   });
+}
+
+/** Merge a portable backup without allowing an import to unlock paid capacity. */
+export function mergeImportedCues(existing: Cue[], imported: Cue[], plus: boolean): ImportMergeResult {
+  const next = new Map(existing.map((cue) => [cue.id, cue]));
+  let importedCount = 0;
+  let skippedForLimit = 0;
+  let skippedForPlusScope = 0;
+
+  for (const cue of imported) {
+    if (!plus && cue.scope === 'everywhere') {
+      skippedForPlusScope += 1;
+      continue;
+    }
+    if (!next.has(cue.id) && !plus && next.size >= FREE_CUE_LIMIT) {
+      skippedForLimit += 1;
+      continue;
+    }
+    next.set(cue.id, cue);
+    importedCount += 1;
+  }
+
+  return { cues: [...next.values()], imported: importedCount, skippedForLimit, skippedForPlusScope };
 }
