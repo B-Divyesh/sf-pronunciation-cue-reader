@@ -1,0 +1,9 @@
+{
+  "asset": "pronunciation-field.png",
+  "generated_at": "2026-08-28",
+  "generator": "/opt/fleet/lib/gen-image.sh (factory-image deployment)",
+  "size": "1536x1024",
+  "quality": "high",
+  "prompt": "Use case: stylized-concept. Asset type: landing-page hero illustration. Create an abstract pronunciation field: many small rounded paper particles and syllable-like capsules pass through one vermilion geometric cue gate, then align into a clear cobalt reading rail with a few acid-lime memory markers. Tactile editorial cut-paper construction, warm off-white ground, near-black structural lines, soft raking studio light, subtle fiber and embossed edges, slight axonometric perspective. Landscape composition with the main structure on the right and calm negative space on the left. No text, no letters, no watermark, no logos, no people, no microphones, no headphones, no anatomy, no glossy 3D, no generic gradient, no UI screenshot.",
+  "review": "Accepted: coherent paper geometry, correct palette, clear gate-to-reading-path metaphor, no text or brand artifacts."
+}
