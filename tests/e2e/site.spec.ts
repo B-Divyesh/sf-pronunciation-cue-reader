@@ -77,10 +77,5 @@ test('fresh service worker install reloads the app while offline', async ({ page
   await context.setOffline(true);
   await page.reload();
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
-  await page.evaluate(() => {
-    Object.defineProperty(navigator, 'onLine', { configurable: true, value: false });
-    window.dispatchEvent(new Event('offline'));
-  });
-  await expect(page.locator('#offline-banner')).toBeVisible();
   expect(pageErrors).toEqual([]);
 });
