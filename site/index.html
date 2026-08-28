@@ -1,0 +1,136 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Say It Right is a private browser extension that remembers how technical terms and names should sound, then reads selected text aloud." />
+    <meta name="theme-color" content="#F4F0E6" />
+    <title>Say It Right — your pronunciation memory</title>
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="preload" href="/assets/pronunciation-field.webp" as="image" type="image/webp" />
+    <link rel="stylesheet" href="/src/site.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to main content</a>
+    <header class="site-header">
+      <a class="logo" href="/" aria-label="Say It Right home">
+        <span class="logo-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Say It Right</span>
+      </a>
+      <nav aria-label="Main navigation">
+        <a href="#how">How it works</a>
+        <a href="#plus">Plus</a>
+        <a class="nav-download" href="/downloads/say-it-right.zip">Download</a>
+      </nav>
+    </header>
+
+    <main id="main">
+      <section class="hero">
+        <div class="hero-copy">
+          <p class="kicker"><span aria-hidden="true"></span>Private pronunciation cues</p>
+          <h1>Stop teaching your reader the same word.</h1>
+          <p class="hero-lede">Save how a name, abbreviation, or technical term should sound. Say It Right remembers the cue on that site and reads your selected passage with it next time.</p>
+          <div class="hero-actions">
+            <a class="button primary" href="/downloads/say-it-right.zip" download>Download for Chrome</a>
+            <a class="button quiet" href="#install">Installation guide</a>
+          </div>
+          <p class="microcopy">Free reader · 20 site cues · No account · Chrome and Chromium browsers</p>
+        </div>
+        <figure class="hero-art">
+          <picture>
+            <source srcset="/assets/pronunciation-field.webp" type="image/webp" />
+            <img src="/assets/pronunciation-field.jpg" width="1536" height="1024" alt="Abstract paper shapes passing through a red cue gate and aligning along a blue reading path" fetchpriority="high" decoding="async" />
+          </picture>
+          <figcaption><span class="cue-dot" aria-hidden="true"></span>Scattered terms in. A clear reading path out.</figcaption>
+        </figure>
+      </section>
+
+      <section class="proof-strip" aria-label="Product principles">
+        <p><strong>Local by default</strong><span>Your text and cues stay in your browser.</span></p>
+        <p><strong>Source preserving</strong><span>The page is never rewritten.</span></p>
+        <p><strong>Voice independent</strong><span>Preview in the voices already installed.</span></p>
+      </section>
+
+      <section class="problem" aria-labelledby="problem-title">
+        <div class="section-number" aria-hidden="true">01</div>
+        <div class="problem-copy">
+          <p class="kicker">A small fix for a recurring interruption</p>
+          <h2 id="problem-title">The page says “PostgreSQL.” Your voice says… something else.</h2>
+          <p>Correcting the source text works once. Searching a dictionary breaks your reading flow. A cue remembers your preferred spoken form without touching the material you return to.</p>
+        </div>
+        <div class="before-after" aria-label="Example pronunciation cue">
+          <div><span>On the page</span><strong>PostgreSQL</strong></div>
+          <div class="gate" aria-hidden="true"><i></i><i></i><i></i></div>
+          <div><span>Say it like</span><strong>post-gress cue ell</strong></div>
+        </div>
+      </section>
+
+      <section id="how" class="how" aria-labelledby="how-title">
+        <div class="section-heading">
+          <div><p class="kicker">Three deliberate steps</p><h2 id="how-title">Listen without leaving the page.</h2></div>
+          <p>Select a passage, open the extension with <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>S</kbd>, and listen. The current chunk stays visibly marked while it is spoken.</p>
+        </div>
+        <ol class="steps">
+          <li><span class="step-shape one" aria-hidden="true"></span><div><b>1</b><h3>Select</h3><p>Highlight only the passage you need. Say It Right never scrapes the full document.</p></div></li>
+          <li><span class="step-shape two" aria-hidden="true"></span><div><b>2</b><h3>Teach once</h3><p>Save a phonetic spelling or replacement, scoped to the current site by default.</p></div></li>
+          <li><span class="step-shape three" aria-hidden="true"></span><div><b>3</b><h3>Read clearly</h3><p>Preview an installed voice, then follow the highlighted chunks as they are spoken.</p></div></li>
+        </ol>
+      </section>
+
+      <section class="details" aria-labelledby="details-title">
+        <div class="detail-intro"><p class="kicker">Made for the words that matter</p><h2 id="details-title">A glossary that belongs to you.</h2></div>
+        <div class="feature-lines">
+          <article><span class="line-icon" aria-hidden="true">Aa</span><h3>Names and terms</h3><p>Match whole words or phrases, including abbreviations and product names.</p></article>
+          <article><span class="line-icon orbit" aria-hidden="true"></span><h3>Local-first memory</h3><p>Cues use extension storage. Backup is an explicit JSON export you control.</p></article>
+          <article><span class="line-icon play" aria-hidden="true"></span><h3>Installed voices</h3><p>Hear a cue before saving. IPA can help, but exact results still depend on your voice engine.</p></article>
+          <article><span class="line-icon keyboard" aria-hidden="true">⌨</span><h3>Keyboard ready</h3><p>Every action is reachable without a pointer, with visible focus and a browser shortcut.</p></article>
+        </div>
+      </section>
+
+      <section id="plus" class="plus" aria-labelledby="plus-title">
+        <div class="plus-geometry" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+        <div class="plus-copy">
+          <p class="kicker">Say It Right Plus</p>
+          <h2 id="plus-title">Build the glossary you keep.</h2>
+          <p>Unlock unlimited cues and make selected cues work on every site. Reading, site cues, and data export remain genuinely useful for free.</p>
+          <ul><li>Unlimited saved cues</li><li>Every-site cue scope</li><li>One-time purchase, no subscription</li></ul>
+        </div>
+        <div class="price-block">
+          <p><strong>$12</strong><span>once</span></p>
+          <a class="button lime" href="https://api.sociobot.in/api/v1/products/pronunciation-cue-reader/checkout">Buy Plus</a>
+          <p class="merchant">Secure hosted checkout. Sociobot/Dodo is the merchant of record.</p>
+        </div>
+      </section>
+
+      <section class="license-panel" aria-labelledby="license-title">
+        <div><p class="kicker">Already purchased?</p><h2 id="license-title">Take Plus to this browser.</h2><p>Paste your license into the extension’s Backup and Plus section. If checkout returned you here, this page keeps a local copy so you can copy it below.</p></div>
+        <div class="license-form">
+          <label for="site-license">License token</label>
+          <div><input id="site-license" type="password" autocomplete="off" placeholder="Paste or retrieve your token" /><button id="copy-license" class="button quiet" type="button">Copy</button></div>
+          <button id="verify-license" class="text-action" type="button">Verify license</button>
+          <p id="license-status" role="status" aria-live="polite"></p>
+        </div>
+      </section>
+
+      <section id="install" class="install" aria-labelledby="install-title">
+        <p class="kicker">Install the v1 package</p><h2 id="install-title">Add it in under a minute.</h2>
+        <ol><li>Download and unzip the extension package.</li><li>Open <code>chrome://extensions</code> and turn on Developer mode.</li><li>Choose “Load unpacked” and select the unzipped folder.</li><li>Select some text, then click the Say It Right icon.</li></ol>
+        <p class="note">Store distribution is the next release step. This signed-source preview is provided for direct evaluation.</p>
+      </section>
+
+      <section class="final-cta">
+        <div class="final-orbit" aria-hidden="true"></div>
+        <h2>Keep the page. Fix the sound.</h2>
+        <a class="button primary" href="/downloads/say-it-right.zip" download>Download Say It Right</a>
+      </section>
+    </main>
+    <footer class="site-footer">
+      <a class="logo" href="/"><span class="logo-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>Say It Right</span></a>
+      <p>A private pronunciation cue reader from the Param Factory. Hero artwork generated for this product with the factory image model.</p>
+      <nav aria-label="Legal"><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a><a href="https://github.com/B-Divyesh/sf-pronunciation-cue-reader">Source</a></nav>
+    </footer>
+    <div id="offline-banner" class="offline-banner" hidden>You’re offline. Downloads and license checks need a connection; the installed extension still works.</div>
+    <script type="module" src="/src/site.ts"></script>
+  </body>
+</html>

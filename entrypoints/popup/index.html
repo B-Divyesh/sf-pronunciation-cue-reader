@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="light dark" />
+    <title>Say It Right</title>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to reader</a>
+    <header class="topbar">
+      <a class="brand" href="https://pronunciation-cue-reader.sociobot.in" target="_blank" aria-label="Say It Right website">
+        <span class="brand-mark" aria-hidden="true"><i></i><i></i><i></i></span>
+        <span>Say It Right</span>
+      </a>
+      <span class="site-pill" id="site-pill">This page</span>
+    </header>
+
+    <main id="main">
+      <section class="intro" aria-labelledby="reader-title">
+        <p class="eyebrow">Your pronunciation memory</p>
+        <h1 id="reader-title">Read this selection</h1>
+        <p class="lede">Select text on the page, then open the extension. Your saved cues will be used automatically.</p>
+      </section>
+
+      <section class="reader" aria-label="Selected text reader">
+        <div id="selection-empty" class="state-panel">
+          <span class="state-orbit" aria-hidden="true"></span>
+          <h2>Select a passage first</h2>
+          <p>Highlight a short section on the page, then reopen Say It Right. You can also right-click a term to add a cue.</p>
+          <button id="retry-selection" class="secondary" type="button">Check selection</button>
+        </div>
+        <div id="reader-ready" hidden>
+          <div id="chunks" class="chunks" aria-label="Passage; the current chunk is marked"></div>
+          <div class="reader-controls">
+            <button id="read-button" class="primary" type="button">
+              <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M8 5v14l11-7z" /></svg>
+              <span>Read aloud</span>
+            </button>
+            <button id="stop-button" class="icon-button" type="button" aria-label="Stop reading" disabled>
+              <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M7 7h10v10H7z" /></svg>
+            </button>
+            <label class="voice-field">Voice
+              <select id="voice-select"><option value="">System default</option></select>
+            </label>
+          </div>
+          <button id="use-first-word" class="text-button" type="button">Add a cue from this selection</button>
+        </div>
+      </section>
+
+      <section class="cue-section" aria-labelledby="cue-title">
+        <div class="section-heading">
+          <div><p class="eyebrow">This site</p><h2 id="cue-title">Pronunciation cues</h2></div>
+          <button id="new-cue" class="secondary compact" type="button">Add cue</button>
+        </div>
+
+        <form id="cue-form" class="cue-form" hidden novalidate>
+          <input type="hidden" id="cue-id" />
+          <label for="term">Word or phrase</label>
+          <input id="term" name="term" maxlength="120" autocomplete="off" required />
+          <label for="say-as">Say it like</label>
+          <div class="preview-row">
+            <input id="say-as" name="say-as" maxlength="180" autocomplete="off" required aria-describedby="cue-help cue-error" />
+            <button id="preview-cue" class="icon-button" type="button" aria-label="Preview pronunciation">
+              <svg aria-hidden="true" viewBox="0 0 24 24"><path d="M4 9v6h4l5 4V5L8 9H4zm12.5 3a4.5 4.5 0 0 0-2-4.03v8.05A4.5 4.5 0 0 0 16.5 12z" /></svg>
+            </button>
+          </div>
+          <p id="cue-help" class="field-help">Use phonetic spelling or a replacement. Exact IPA results depend on the installed voice.</p>
+          <label class="check-row"><input id="global-scope" type="checkbox" /> Use on every site <span class="pro-chip">Plus</span></label>
+          <p id="cue-error" class="error" role="alert"></p>
+          <div class="form-actions">
+            <button class="primary" type="submit">Save cue</button>
+            <button id="cancel-cue" class="text-button" type="button">Cancel</button>
+          </div>
+        </form>
+
+        <div id="cue-empty" class="cue-empty"><p>No cues here yet. Add a name, abbreviation, or technical term that your voice gets wrong.</p></div>
+        <ul id="cue-list" class="cue-list" aria-live="polite"></ul>
+      </section>
+
+      <details class="tools">
+        <summary>Backup and Plus</summary>
+        <div class="tools-body">
+          <div class="tool-row">
+            <div><strong>Keep your glossary portable</strong><p>Export and import never send your cues anywhere.</p></div>
+            <div class="paired-actions"><button id="export-button" class="secondary compact" type="button">Export</button><label class="file-button">Import<input id="import-file" type="file" accept="application/json" /></label></div>
+          </div>
+          <div class="plus-panel">
+            <span class="pro-chip">Plus · $12 once</span>
+            <h2>Unlimited cues, on every site</h2>
+            <p>The free reader includes 20 site cues. Plus removes the limit and adds cues that work everywhere.</p>
+            <a class="primary button-link" href="https://api.sociobot.in/api/v1/products/pronunciation-cue-reader/checkout" target="_blank">Buy Plus</a>
+            <label for="license-input">Have a license?</label>
+            <div class="license-row"><input id="license-input" type="password" autocomplete="off" placeholder="Paste license token" /><button id="license-button" class="secondary compact" type="button">Verify</button></div>
+            <p id="license-status" class="field-help" aria-live="polite"></p>
+          </div>
+        </div>
+      </details>
+    </main>
+    <footer><a href="https://pronunciation-cue-reader.sociobot.in/privacy/" target="_blank">Privacy</a><span aria-hidden="true">·</span><span>Stored on this device</span></footer>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <script type="module" src="./main.ts"></script>
+  </body>
+</html>

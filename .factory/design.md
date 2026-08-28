@@ -19,7 +19,7 @@ Light is the primary treatment; dark follows the reader's system preference.
 | Sheet | `#FFFDF7` | `#20231F` | elevated working surface |
 | Ink | `#17201C` | `#F5F1E7` | primary copy |
 | Quiet ink | `#59615C` | `#BFC6BF` | secondary copy |
-| Vermilion | `#D84A2F` | `#FF765E` | primary action and current word |
+| Vermilion | `#C43B22` | `#FF765E` | primary action and current word |
 | Cobalt | `#2547B8` | `#8EA7FF` | links, focus, annotation |
 | Acid lime | `#C9E45A` | `#D5ED70` | successful cue/memory signal |
 | Ochre | `#A25D00` | `#FFC56A` | warning |
