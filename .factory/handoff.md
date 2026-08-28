@@ -2,7 +2,7 @@
 
 ## Release status: PASS
 
-- Repair commit: `12fb0b9` (`fix release blockers for extension delivery`), pushed to `origin/main`.
+- Product repair commit: `12fb0b9` (`fix release blockers for extension delivery`); verification/handoff commit: `f3f512f`, both pushed to `origin/main`.
 - Deployed static artifact: `dist/site` to <https://pronunciation-cue-reader.sociobot.in/> on 2026-08-28.
 - This repair preserves the WXT/TypeScript Manifest V3 extension and static companion-site deployment class.
 
