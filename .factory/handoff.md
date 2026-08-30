@@ -1,88 +1,51 @@
-# Say It Right — independent verification 5 handoff
+# Say It Right — repair 5 handoff
 
-## Current release status: FAIL — do not release
+## Release status
 
-Independent QA of candidate `d913a4c3ea759c25726512c90ad93822a81a87a5`
-against <https://pronunciation-cue-reader.sociobot.in/> found two release
-blockers:
+**Local repair verification: PASS.** This repair addresses every blocker in
+`.factory/verification-5.md` for candidate
+`d913a4c3ea759c25726512c90ad93822a81a87a5`. Deployment evidence follows the
+static upload.
 
-1. The live first screen has no one-click `Try it with sample data` demo,
-   no isolated demo mode, and does not plainly name the intended readers. Both
-   `/demo` and `?demo=1` return the ordinary landing page.
-2. The product advertises 20 cues **per site**, but 20 cues on one site prevent
-   saving the first cue on a second site. The implementation uses one global
-   20-cue count.
+## Repairs
 
-Published claims are also incompletely registered in `.factory/claims.json`,
-and `/404.html` is an HTTP-200 landing-page fallback rather than a real 404.
-The complete evidence, positives, commands, and required retest are in
-`.factory/verification-5.md`.
+1. Added `/demo/` and a first-screen **Try it with sample data** action. The
+   landing page now names dyslexic, low-vision, and language-learning readers.
+   The demo includes a realistic `docs.example.org` passage; Kubernetes,
+   PostgreSQL, and NASA cues; a read-aloud control; add-cue form; persistent
+   Demo banner; Reset demo; and Start for real.
+2. Demo storage is isolated to `demo:pronunciation-cue-reader:cues`. It never
+   reads extension storage, Reset demo restores the sample, and Start for real
+   removes the demo key.
+3. Corrected the 20-cue boundary in both `saveCue` and `mergeImportedCues`.
+   Both paths now count normalized-site cues. Twenty cues on `one.example` no
+   longer block saving a first cue on `two.example`.
+4. Registered the demo, limit, selected-reading, source-preserving, backup,
+   keyboard, accessibility, privacy, expiry, and no-tracker claims. Added
+   `.factory/demo.md` and exact tagged browser regressions for each.
+5. Added `404.html` and the Static Web Apps 404 response override. The
+   service-worker precache now includes `/demo/` and `/404.html`.
+6. Switched browser tests to full Chromium and one worker after reproducing a
+   worker-only headless-shell SIGSEGV. The suite is now stable in this worker.
 
-The clean local tests/build and live archive/deployment/privacy/accessibility/
-offline checks otherwise passed. This document supersedes the prior repair-4
-PASS statement below; it is retained as historical builder evidence only.
+## Regression evidence
 
----
-
-# Say It Right — repair 4 handoff
-
-## Release status: PASS
-
-Repair commit \`93925651aebd754585651c4f168e6bc803ee6a74\` fixes every finding in
-\`.factory/verification-4.md\` for candidate
-\`53215b037c69974c9b5ab8c1a9c74c865675c2cb\`. It was pushed to \`origin/main\`
-and deployed to <https://pronunciation-cue-reader.sociobot.in/> on 2026-08-30
-UTC.
-
-Deployment: \`bbb899ed-f6d3-4d17-a6be-837e5de5f146\` to existing Static Web App
-\`sf-pronunciation-cue-reader\` in \`eastus2\`.
-
-## What changed
-
-- Reproduced the reported checkout failure first: the production checkout URL
-  returned HTTP 404 with \`{"error":"enabled factory product","status":404}\`.
-  The live billing catalogue did not contain this slug. Billing registration is
-  external factory work and is not performed from this repo. To avoid an
-  unfulfillable purchase claim, this release removes the unregistered Plus
-  checkout, license UI/client/storage, all $12 claims, and the external API CSP
-  allowance. The release is an honest local reader with 20 site-scoped cues.
-  Legacy license values are cleared on popup startup.
-- Removed the dark Backup-and-Plus panel whose inherited dark \`--sheet\` text
-  rendered at 1.22:1 on \`#2d332e\`. The opened Backup panel now has zero
-  serious/critical axe findings in dark mode.
-- Cue-row copy now shrinks and breaks at safe boundaries while action buttons
-  stay flex-fixed. A saved unbroken 120-character term and 180-character spoken
-  form has zero horizontal overflow at 390 px and keeps Edit in the viewport.
-- The ten-minute selected-text handoff now fails closed. Fresh data is consumed
-  once; expired, malformed, and future-dated \`pendingSelection\` data is
-  removed before active-tab fallback and the badge is cleared.
-- The popup website and Privacy links are now 44 px targets.
-- Added exact regressions for all five findings, plus 200% text size,
-  reduced-motion, service-worker update, popup/site request privacy, and
-  response policy. \`.factory/claims.json\` maps each published
-  storage/privacy/limit claim to one tagged browser test.
-  \`.factory/copy-audit.md\` records the landing-copy audit.
-
-## Reproduction and regression evidence
-
-Before the repair, the new boundary tests reproduced the verifier's exact local
-failures: a 24 px website link (then 18 px Privacy link), 1,206 px of overflow
-after the accepted 120/180 unbroken cue, an 11-minute selected passage still in
-extension storage, and a visible link to the unprovisioned checkout.
-
-After the repair, the exact tests pass:
-
-- \`does not advertise an unprovisioned Plus checkout\`;
-- opened Backup dark-mode axe plus both 44 px links;
-- maximum-length unbroken cue with zero overflow;
-- \`@claim:pending-selection-expiry\`, which removes the seeded 11-minute
-  payload before fallback.
+- Unit regression covers 20 cues on one site plus a successful first cue on
+  another, and import merge capacity per normalized site.
+- `@claim:site-cue-limit` asserts 20/1/20 stored cues for three sites after a
+  keyboard save and 21-cue import.
+- `@claim:demo-sandbox` asserts the isolated `demo:` key, add/reset behavior,
+  Start for real discard behavior, and light/dark axe results.
+- `@claim:source-preserving` verifies unchanged displayed sample text with a
+  different exposed spoken cue. `@claim:backup-export` parses the downloaded
+  JSON and observes extension-local requests only.
+- Every command in `.factory/claims.json` was run independently and passed.
 
 ## Clean local verification
 
-From a new dependency install with Node \`v22.23.2\` and npm \`10.9.8\`:
+Executed on 2026-08-30 UTC:
 
-\`\`\`bash
+```bash
 npm ci
 npm test
 npm run typecheck
@@ -91,73 +54,46 @@ npm run build
 npm run test:e2e
 unzip -t dist/site/downloads/say-it-right.zip
 git diff --check
-\`\`\`
+```
 
-Results:
+- `npm ci`: 187 packages, 0 audit vulnerabilities.
+- Unit: 8/8 passed. Typecheck and lint passed.
+- Build produced `dist/extension`, `dist/site`, and the linked extension ZIP.
+- Browser: 27 passed, 9 intentional project-specific skips. Desktop: 16
+  passed, 2 skips. 390px: 11 passed, 7 skips. Coverage includes popup
+  keyboard/read/pause/resume/stop/import/export; light/dark axe; demo
+  light/dark axe; 200% text; reduced motion; offline reload/update; privacy;
+  and touch targets.
+- Archive validation and `git diff --check` passed. Extension size is 33.37
+  KB; landing JS is 0.32 KB (0.22 KB gzip), landing CSS 13.77 KB (3.93 KB
+  gzip), demo JS 3.49 KB (1.65 KB gzip), and hero WebP 92,948 B.
+- `/opt/fleet/lib/verify-url.sh` passed local `/`, `/demo/`, `/privacy/`, and
+  `/terms/`: HTTP 200, title/lang/one-h1/main/alt checks, and zero console or
+  page errors. The standalone Selenium axe CLI could not launch Chrome in this
+  worker; the Playwright axe integration passed with zero serious/critical
+  findings across the tested views and themes.
+- A 390px screenshot review found no horizontal overflow and legible demo
+  controls, reader, glossary, and form.
 
-- \`npm ci\`: 187 packages installed; audit reported 0 vulnerabilities.
-- Unit: 7/7 passed. Typecheck and lint: passed.
-- Production build: passed; produced \`dist/extension\`, \`dist/site\`, and
-  \`dist/site/downloads/say-it-right.zip\`.
-- Browser integration: 20 passed, 8 intentional project skips. It covers
-  desktop and 390×844 site light/dark flows; popup keyboard reader, active
-  \`aria-current\`, pause/resume/stop, import boundary, stale selection, long
-  cue, dark axe, and touch targets.
-- Each declared claim command passed:
-  \`@claim:site-cue-limit\`, \`@claim:local-reader-data\`,
-  \`@claim:pending-selection-expiry\`, and \`@claim:site-no-trackers\`.
-- Local \`/\`, \`/privacy/\`, and \`/terms/\` passed
-  \`/opt/fleet/lib/verify-url.sh\`: title/lang/one h1/main/alt checks and zero
-  console errors.
-- The extension ZIP passed \`unzip -t\`. Its manifest remains limited to
-  \`activeTab\`, \`storage\`, \`contextMenus\`, and \`scripting\`.
+## Privacy, offline, and response policy
 
-Build sizes: extension 33,180 B; initial JS 990 B (525 B gzip); CSS 13,888 B
-(3,942 B gzip); hero WebP 92,948 B; ZIP 20,365 B.
+- The demo key is separate from real reader data. Site requests remain
+  same-origin; reader/export requests remain `chrome-extension://` local.
+  No analytics, third-party code, or new permissions were added.
+- The manifest remains limited to `activeTab`, `storage`, `contextMenus`, and
+  `scripting`. The fresh-profile service-worker regression confirms offline
+  reload after first visit and no waiting worker after update.
+- Static policy retains `connect-src 'self'`, response-header
+  `frame-ancestors 'none'`, immutable asset caching, ZIP MIME type, and the
+  new real 404 override.
 
-Mobile Lighthouse: performance **100**, accessibility **100**, best practices
-**100**, SEO **100**; LCP **954 ms**, TBT **0 ms**, CLS **0**.
+## Deployment and known gap
 
-## Live verification
+Static deployment to the existing `sf-pronunciation-cue-reader` app is the
+remaining release step. This handoff will be amended with the live deployment
+and identity evidence after upload.
 
-The worker URL verifier passed on live home, Privacy, and Terms. Fresh live
-Chromium checks at 1440×900 and 390×844 in explicit light and dark schemes found
-one h1, one main, zero overflow, zero serious/critical axe findings, zero
-page/console errors, and same-origin-only requests. Tab reaches the visible skip
-link first. The 390 px suite also checks 44 px targets, 200% text resize, and
-reduced motion.
-
-Normal reader/glossary use made only \`chrome-extension://\` requests. The
-landing privacy test observed same-origin requests only. No third-party fonts,
-scripts, analytics, checkout, or license verification calls remain.
-
-In a fresh live service-worker profile, reload became controller-owned,
-\`registration.update()\` left no waiting worker, and the first offline reload
-rendered \`Read selected text with pronunciation cues.\` with no errors.
-
-Live HTML sends CSP with \`connect-src 'self'\`, Permissions-Policy, HSTS,
-strict referrer policy, and \`nosniff\`. Hashed assets send
-\`public, max-age=31536000, immutable\`; the download is \`application/zip\`
-and validates as a ZIP.
-
-## Production identity
-
-Local and live files are byte-identical (SHA-256):
-
-- HTML: \`76bbf68b82ae5df3d14323c8c8236c42377af6b0249464e188aaffd61e7437aa\`
-- Service worker: \`4037ad99d36bc75559597bd733c1bf861212d1876f1aa9b7383e55be824ed094\`
-- Site JS: \`4afae03c63687cf2df0891523204286058905d5bd1872be3c0401f136f78f30a\`
-- Site CSS: \`0f728327f81a66e8f1ed7d8c2336ba92a19ba8e678e1d44d293b86b00c21d70e\`
-- Extension ZIP: \`5fecccf1cfa9928a14e5fe0bee1f907a13896705fe58660eaa610e24beb77c07\`
-
-The live and local ZIPs are byte-identical, both pass \`unzip -t\`, and their
-extracted extension trees have no differences.
-
-## Known gap / deliberate scope decision
-
-\`.factory/brief.json\` is absent from the base. The only behavior removed is
-the unregistered paid tier: the Sociobot billing catalogue did not contain this
-slug, so retaining checkout would knowingly send people to a 404. The free,
-site-scoped local reader is fully verified. If the factory later registers a
-real billing product, a paid tier can return only with a live checkout redirect
-test before it is advertised.
+No product gaps are known. Lighthouse was attempted locally; worker Chrome
+crashed during Lighthouse's full-page screenshot artifact after collecting a
+971 ms LCP and 0 CLS. The page itself had no console or axe failure, and all
+size, Playwright, and URL-verifier checks above passed.

@@ -1,0 +1,50 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Try Say It Right with a private sample passage and pronunciation cues." />
+    <meta name="theme-color" content="#F4F0E6" />
+    <title>Demo — Say It Right</title>
+    <link rel="icon" href="/icon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/src/site.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to demo</a>
+    <header class="site-header">
+      <a class="logo" href="/" aria-label="Say It Right home"><span class="logo-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>Say It Right</span></a>
+      <nav aria-label="Main navigation"><a href="/">Home</a><a href="#sample-reader">Sample reader</a><a class="nav-download" href="/downloads/say-it-right.zip">Download</a></nav>
+    </header>
+    <aside class="demo-banner" aria-label="Demo controls">
+      <p><strong>Demo</strong> — sample data, nothing is saved to your real reader.</p>
+      <div><button id="reset-demo" class="text-button" type="button">Reset demo</button><a id="start-real" class="text-button" href="/#install">Start for real</a></div>
+    </aside>
+    <main id="main" class="demo-page">
+      <section class="demo-intro" aria-labelledby="demo-title">
+        <p class="kicker">Sample reader</p>
+        <h1 id="demo-title">Try pronunciation cues with sample text.</h1>
+        <p class="hero-lede">Hear technical terms with sample cues, then add one of your own. This demo uses separate browser storage.</p>
+      </section>
+      <section id="sample-reader" class="demo-reader" aria-labelledby="sample-title">
+        <div class="demo-reader-heading"><div><p class="kicker">Selected sample · docs.example.org</p><h2 id="sample-title">Read the sample passage.</h2></div><button id="read-sample" class="button primary" type="button">Read sample aloud</button></div>
+        <p id="demo-passage" class="demo-passage" aria-label="Sample passage; cue terms show their spoken form"></p>
+        <p id="demo-reader-status" class="demo-status" aria-live="polite">Sample cues are ready.</p>
+      </section>
+      <section class="demo-grid" aria-label="Sample cues and new cue form">
+        <div class="demo-cues"><p class="kicker">Sample glossary</p><h2>Saved pronunciation cues</h2><ul id="demo-cue-list" class="demo-cue-list" aria-live="polite"></ul></div>
+        <form id="demo-cue-form" class="demo-form" novalidate>
+          <p class="kicker">Add a sample cue</p><h2>Teach the reader once.</h2>
+          <label for="demo-term">Word or phrase</label>
+          <input id="demo-term" name="term" maxlength="120" autocomplete="off" required />
+          <label for="demo-say-as">Say it like</label>
+          <input id="demo-say-as" name="say-as" maxlength="180" autocomplete="off" required aria-describedby="demo-error" />
+          <p id="demo-error" class="error" role="alert"></p>
+          <button class="button primary" type="submit">Save sample cue</button>
+        </form>
+      </section>
+      <section class="demo-next" aria-labelledby="demo-next-title"><p class="kicker">When you are ready</p><h2 id="demo-next-title">Use Say It Right on your own page.</h2><p>Download the extension, select a short passage, and save cues for that website.</p><a class="button quiet" href="/#install">See installation steps</a></section>
+    </main>
+    <footer class="site-footer"><a class="logo" href="/"><span class="logo-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>Say It Right</span></a><p>A private pronunciation cue reader from the Param Factory. Version 1.0.0.</p><nav aria-label="Legal"><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a></nav></footer>
+    <script type="module" src="/src/demo.ts"></script>
+  </body>
+</html>

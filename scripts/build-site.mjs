@@ -37,7 +37,7 @@ const staticAssets = walk(join(siteDir, 'assets'))
   .filter((path) => statSync(path).isFile())
   .map((path) => `/${path.slice(siteDir.length + 1).replaceAll('\\', '/')}`)
   .sort();
-const precache = ['/', '/privacy/', '/terms/', '/icon.svg', '/manifest.webmanifest', ...staticAssets];
+const precache = ['/', '/demo/', '/privacy/', '/terms/', '/404.html', '/icon.svg', '/manifest.webmanifest', ...staticAssets];
 const cacheId = createHash('sha256').update(precache.join('\n')).digest('hex').slice(0, 12);
 const swPath = join(siteDir, 'sw.js');
 writeFileSync(swPath, readFileSync(swPath, 'utf8')

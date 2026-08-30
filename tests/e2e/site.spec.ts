@@ -16,6 +16,7 @@ for (const colorScheme of ['light', 'dark'] as const) {
     await expect(page.locator('#how-title')).toBeVisible();
     await expect(page.locator('.steps h3')).toHaveCount(3);
     await expect(page.locator('.line-icon').first()).toHaveText('Aa');
+    await expect(page.getByRole('link', { name: 'Try it with sample data' })).toHaveAttribute('href', '/demo/');
     await expect(page.getByRole('link', { name: 'Download for Chrome' })).toHaveAttribute('href', '/downloads/say-it-right.zip');
     const results = await new AxeBuilder({ page }).analyze();
     expect(results.violations.filter((violation) => ['serious', 'critical'].includes(violation.impact ?? ''))).toEqual([]);
@@ -26,13 +27,46 @@ for (const colorScheme of ['light', 'dark'] as const) {
   });
 }
 
-test('site keeps content visible at 200% text size and reduced motion', async ({ page }, testInfo) => {
+test('@claim:reader-accessibility site keeps content visible at 200% text size and reduced motion', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'mobile-390', 'The text-resize regression is exercised at the requested mobile viewport.');
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/');
   await page.evaluate(() => { document.documentElement.style.fontSize = '200%'; });
   expect(await page.evaluate(() => getComputedStyle(document.documentElement).scrollBehavior)).toBe('auto');
   expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBe(0);
+});
+
+test('@claim:demo-sandbox the one-click sample reader is isolated, resettable, and discarded before real use', async ({ page }) => {
+  await page.goto('/demo/');
+  await expect(page).toHaveTitle('Demo — Say It Right');
+  await expect(page.getByRole('heading', { level: 1, name: 'Try pronunciation cues with sample text.' })).toBeVisible();
+  await expect(page.getByText('Demo — sample data, nothing is saved to your real reader.')).toBeVisible();
+  await expect(page.locator('#demo-passage')).toContainText('Kubernetes');
+  await expect(page.locator('.demo-chunk.has-cue')).toHaveCount(2);
+  await expect(page.locator('#demo-cue-list li')).toHaveCount(3);
+  expect(await page.evaluate(() => Object.keys(localStorage))).toEqual(['demo:pronunciation-cue-reader:cues']);
+
+  await page.getByLabel('Word or phrase').fill('OpenTelemetry');
+  await page.getByLabel('Say it like').fill('open tel eh metry');
+  await page.getByRole('button', { name: 'Save sample cue' }).click();
+  await expect(page.locator('#demo-cue-list')).toContainText('OpenTelemetry');
+  await page.getByRole('button', { name: 'Reset demo' }).click();
+  await expect(page.locator('#demo-cue-list')).not.toContainText('OpenTelemetry');
+  const lightResults = await new AxeBuilder({ page }).analyze();
+  expect(lightResults.violations.filter((violation) => ['serious', 'critical'].includes(violation.impact ?? ''))).toEqual([]);
+  await page.emulateMedia({ colorScheme: 'dark' });
+  const darkResults = await new AxeBuilder({ page }).analyze();
+  expect(darkResults.violations.filter((violation) => ['serious', 'critical'].includes(violation.impact ?? ''))).toEqual([]);
+  await page.getByRole('link', { name: 'Start for real' }).click();
+  await expect(page).toHaveURL(/#install$/);
+  expect(await page.evaluate(() => localStorage.getItem('demo:pronunciation-cue-reader:cues'))).toBeNull();
+});
+
+test('@claim:source-preserving demo keeps displayed selected text separate from its spoken cue output', async ({ page }) => {
+  await page.goto('/demo/');
+  await expect(page.locator('#demo-passage')).toHaveText('The Kubernetes team stores release notes in PostgreSQL. NASA keeps a glossary for new contributors.');
+  await expect(page.locator('.demo-chunk').first()).toHaveAttribute('data-spoken', /koo-ber-net-ees/);
+  await expect(page.locator('.demo-chunk').first()).toContainText('Kubernetes');
 });
 
 test('@claim:site-no-trackers landing requests stay same-origin', async ({ page }) => {
@@ -47,6 +81,15 @@ test('legal pages are present and linked', async ({ page }) => {
   await expect(page.getByRole('heading', { level: 1, name: 'Privacy' })).toBeVisible();
   await page.goto('/terms/');
   await expect(page.getByRole('heading', { level: 1, name: 'Terms of use' })).toBeVisible();
+});
+
+test('ships a styled 404 document with a static-host response override', async ({ page }) => {
+  await page.goto('/404.html');
+  await expect(page.getByRole('heading', { level: 1, name: 'That page is not here.' })).toBeVisible();
+  const config = JSON.parse(readFileSync('dist/site/staticwebapp.config.json', 'utf8')) as {
+    responseOverrides: Record<string, { rewrite: string; statusCode: number }>;
+  };
+  expect(config.responseOverrides['404']).toEqual({ rewrite: '/404.html', statusCode: 404 });
 });
 
 test('does not advertise an unprovisioned Plus checkout', async ({ page }) => {

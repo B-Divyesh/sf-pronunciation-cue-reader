@@ -26,6 +26,11 @@ export function activeCues(cues: Cue[], site: string): Cue[] {
     .sort((a, b) => b.term.length - a.term.length);
 }
 
+/** A free glossary is intentionally bounded per normalized website, not per account. */
+export function hasSiteCueCapacity(cues: Cue[], site: string, replacingId?: string): boolean {
+  return activeCues(cues, site).filter((cue) => cue.id !== replacingId).length < FREE_CUE_LIMIT;
+}
+
 export function replaceCues(text: string, cues: Cue[]): { spoken: string; hasCue: boolean } {
   let spoken = text;
   let hasCue = false;
@@ -99,7 +104,7 @@ export function mergeImportedCues(existing: Cue[], imported: Cue[]): ImportMerge
       skippedForUnsupportedScope += 1;
       continue;
     }
-    if (!next.has(cue.id) && next.size >= FREE_CUE_LIMIT) {
+    if (!next.has(cue.id) && !hasSiteCueCapacity([...next.values()], cue.site)) {
       skippedForLimit += 1;
       continue;
     }

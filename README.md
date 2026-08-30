@@ -7,22 +7,25 @@ extension, and listen while spoken chunks are highlighted. If a voice gets a
 term wrong, save a site-specific phonetic spelling or replacement and preview
 it in any voice installed in the browser.
 
-The extension never rewrites the source page, never scrapes the full document,
-and does not send selected text or cues to a server.
+The extension does not send selected text or cues to a server.
+
+Try the isolated sample reader at [/demo/](/demo/). Its Kubernetes,
+PostgreSQL, and NASA sample uses only the `demo:` browser-storage namespace.
+Use **Reset demo** to restore it or **Start for real** to discard it before
+installing the extension.
 
 ## Features
 
-- Reads only text the user explicitly selects, with visible and screen-reader
-  chunk progress; reading can pause, resume, or stop.
+- Reads selected text with visible chunk progress; reading can pause, resume,
+  or stop.
 - Stores a private per-site pronunciation glossary in extension-local storage.
 - Adds, previews, edits, and deletes cues; warns that IPA realization is
   voice-engine dependent.
 - Works from the toolbar, `Alt+Shift+S`, or the selection context menu.
-- Imports and exports portable JSON backups without a server.
+- Exports a JSON backup when you request it and imports portable backups.
 - Includes 20 site cues per website. Every cue stays scoped to the site where
   you saved it.
-- Supports keyboard use, 200% text zoom, light/dark color schemes, and reduced
-  motion.
+- Supports keyboard use, 200% text zoom, and reduced motion.
 
 ## Develop
 
@@ -70,6 +73,7 @@ page until the user invokes it.
 - `site/` — landing, privacy, and terms pages
 - `assets/src/` — original generated artwork and provenance
 - `.factory/design.md` — product-specific visual system
+- `.factory/demo.md` — sample data and isolated demo behavior
 - `.factory/handoff.md` — verification and release handoff
 
 ## Privacy

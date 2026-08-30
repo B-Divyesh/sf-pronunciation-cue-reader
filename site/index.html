@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Say It Right is a private browser extension that remembers how technical terms and names should sound, then reads selected text aloud." />
     <meta name="theme-color" content="#F4F0E6" />
-    <title>Say It Right — your pronunciation memory</title>
+    <title>Say It Right — pronounce selected text</title>
     <link rel="icon" href="/icon.svg" type="image/svg+xml" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="preload" href="/assets/pronunciation-field.webp" as="image" type="image/webp" />
@@ -19,6 +19,7 @@
         <span>Say It Right</span>
       </a>
       <nav aria-label="Main navigation">
+        <a href="/demo/">Try the demo</a>
         <a href="#how">How it works</a>
         <a class="nav-download" href="/downloads/say-it-right.zip">Download</a>
       </nav>
@@ -29,25 +30,25 @@
         <div class="hero-copy">
           <p class="kicker"><span aria-hidden="true"></span>Private pronunciation cues</p>
           <h1>Read selected text with pronunciation cues.</h1>
-          <p class="hero-lede">Save how a name, abbreviation, or technical term should sound. Say It Right remembers the cue on that site and reads your selected passage with it next time.</p>
+          <p class="hero-lede">For dyslexic, low-vision, and language-learning readers who need names and technical terms pronounced consistently.</p>
           <div class="hero-actions">
-            <a class="button primary" href="/downloads/say-it-right.zip" download>Download for Chrome</a>
-            <a class="button quiet" href="#install">Installation guide</a>
+            <a class="button primary" href="/demo/">Try it with sample data</a>
+            <a class="button quiet" href="/downloads/say-it-right.zip" download>Download for Chrome</a>
           </div>
-          <p class="microcopy">20 cues per site · No account · Chrome and Chromium browsers</p>
+          <p class="microcopy">Opens a private sample reader · 20 cues per site · No account</p>
         </div>
         <figure class="hero-art">
           <picture>
             <source srcset="/assets/pronunciation-field.webp" type="image/webp" />
             <img src="/assets/pronunciation-field.jpg" width="1536" height="1024" alt="Abstract paper shapes passing through a red cue gate and aligning along a blue reading path" fetchpriority="high" decoding="async" />
           </picture>
-          <figcaption><span class="cue-dot" aria-hidden="true"></span>Pronunciation cues keep the page text unchanged.</figcaption>
+          <figcaption><span class="cue-dot" aria-hidden="true"></span>Cues change spoken output, not the selection shown in the reader.</figcaption>
         </figure>
       </section>
 
       <section class="proof-strip" aria-label="Product principles">
         <p><strong>Local by default</strong><span>Your text and cues stay in your browser.</span></p>
-        <p><strong>Source preserving</strong><span>The page is never rewritten.</span></p>
+        <p><strong>Selection preserving</strong><span>The reader shows the selected words unchanged.</span></p>
         <p><strong>Voice independent</strong><span>Preview in the voices already installed.</span></p>
       </section>
 
@@ -71,7 +72,7 @@
           <p>Select a passage, open the extension with <kbd>Alt</kbd> + <kbd>Shift</kbd> + <kbd>S</kbd>, and listen. The current chunk stays visibly marked while it is spoken.</p>
         </div>
         <ol class="steps">
-          <li><span class="step-shape one" aria-hidden="true"></span><div><b>1</b><h3>Select</h3><p>Highlight only the passage you need. Say It Right never scrapes the full document.</p></div></li>
+          <li><span class="step-shape one" aria-hidden="true"></span><div><b>1</b><h3>Select</h3><p>Choose the passage you want to hear. The extension reads that selection.</p></div></li>
           <li><span class="step-shape two" aria-hidden="true"></span><div><b>2</b><h3>Teach once</h3><p>Save a phonetic spelling or replacement, scoped to the current site by default.</p></div></li>
           <li><span class="step-shape three" aria-hidden="true"></span><div><b>3</b><h3>Read clearly</h3><p>Preview an installed voice, then follow the highlighted chunks as they are spoken.</p></div></li>
         </ol>
@@ -81,9 +82,9 @@
         <div class="detail-intro"><p class="kicker">Your saved cues</p><h2 id="details-title">Save cues for names and terms.</h2></div>
         <div class="feature-lines">
           <article><span class="line-icon" aria-hidden="true">Aa</span><h3>Names and terms</h3><p>Match whole words or phrases, including abbreviations and product names.</p></article>
-          <article><span class="line-icon orbit" aria-hidden="true"></span><h3>Local-first memory</h3><p>Cues use extension storage. Backup is an explicit JSON export you control.</p></article>
+          <article><span class="line-icon orbit" aria-hidden="true"></span><h3>Local-first memory</h3><p>Cues use extension storage. Export a JSON backup when you need one.</p></article>
           <article><span class="line-icon play" aria-hidden="true"></span><h3>Installed voices</h3><p>Hear a cue before saving. IPA can help, but exact results still depend on your voice engine.</p></article>
-          <article><span class="line-icon keyboard" aria-hidden="true">⌨</span><h3>Keyboard ready</h3><p>Every action is reachable without a pointer, with visible focus and a browser shortcut.</p></article>
+          <article><span class="line-icon keyboard" aria-hidden="true">⌨</span><h3>Keyboard controls</h3><p>Use the keyboard to move through controls, with visible focus and a browser shortcut.</p></article>
         </div>
       </section>
 
@@ -101,7 +102,7 @@
     </main>
     <footer class="site-footer">
       <a class="logo" href="/"><span class="logo-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>Say It Right</span></a>
-      <p>A private pronunciation cue reader from the Param Factory. Hero artwork generated for this product with the factory image model.</p>
+      <p>A private pronunciation cue reader from the Param Factory. Hero artwork generated for this product with the factory image model. Version 1.0.0.</p>
       <nav aria-label="Legal"><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a><a href="https://github.com/B-Divyesh/sf-pronunciation-cue-reader">Source</a></nav>
     </footer>
     <div id="offline-banner" class="offline-banner" hidden>You’re offline. Downloads need a connection; the installed extension still works.</div>

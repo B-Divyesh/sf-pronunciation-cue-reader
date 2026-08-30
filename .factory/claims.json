@@ -1,10 +1,17 @@
 [
   {
+    "id": "demo-sandbox",
+    "claim": "Try the reader with sample data that stays separate from real reader data.",
+    "where": "landing first action, demo banner, README",
+    "test": "npm run test:e2e -- --grep @claim:demo-sandbox",
+    "sandbox": "fresh browser page opens /demo/, saves a sample cue, resets it, and asserts only the demo: localStorage namespace was used and Start for real discards it"
+  },
+  {
     "id": "site-cue-limit",
     "claim": "Stores up to 20 site-scoped cues.",
     "where": "landing page, terms, README",
     "test": "npm run test:e2e -- --grep @claim:site-cue-limit",
-    "sandbox": "fresh Chromium extension profile; import 21 site cues and assert exactly 20 are stored"
+    "sandbox": "fresh Chromium extension profile; seed 20 cues on one.example, save one on two.example, import 21 on three.example, and assert 20/1/20 per-site counts"
   },
   {
     "id": "local-reader-data",
@@ -12,6 +19,41 @@
     "where": "privacy page, README",
     "test": "npm run test:e2e -- --grep @claim:local-reader-data",
     "sandbox": "fresh Chromium extension profile; read selected text, save a cue, and assert every request remains extension-local"
+  },
+  {
+    "id": "selected-reading",
+    "claim": "Reads selected text with saved pronunciation cues through browser speech controls.",
+    "where": "landing page, README",
+    "test": "npm run test:e2e -- --grep @claim:selected-reading",
+    "sandbox": "fresh Chromium extension profile; seed a selected passage and cue, assert the spoken replacement, then exercise read, pause, resume, and stop"
+  },
+  {
+    "id": "source-preserving",
+    "claim": "Keeps the selected words visible while applying cues only to spoken output.",
+    "where": "landing page",
+    "test": "npm run test:e2e -- --grep @claim:source-preserving",
+    "sandbox": "fresh /demo/ page; assert the displayed sample text remains unchanged while its cue-bearing chunk exposes a different spoken value"
+  },
+  {
+    "id": "backup-export",
+    "claim": "Exports a JSON backup when you request it.",
+    "where": "landing page, privacy page, README",
+    "test": "npm run test:e2e -- --grep @claim:backup-export",
+    "sandbox": "fresh Chromium extension profile; save a cue, trigger Export, parse the downloaded JSON, and record extension-local requests only"
+  },
+  {
+    "id": "keyboard-reader",
+    "claim": "Lets readers use the cue flow with a keyboard and visible focus.",
+    "where": "landing page, README",
+    "test": "npm run test:e2e -- --grep @claim:keyboard-reader",
+    "sandbox": "fresh Chromium extension profile; reach the skip link and Add cue by keyboard, then save the cue with Enter"
+  },
+  {
+    "id": "reader-accessibility",
+    "claim": "Keeps the site usable at 200% text size and with reduced motion.",
+    "where": "README",
+    "test": "npm run test:e2e -- --grep @claim:reader-accessibility",
+    "sandbox": "fresh 390px browser page; apply 200% root text size with reduced motion, then assert no horizontal overflow and instant scroll behavior"
   },
   {
     "id": "pending-selection-expiry",

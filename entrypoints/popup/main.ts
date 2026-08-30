@@ -1,6 +1,6 @@
 import './style.css';
 import './touch-targets.css';
-import { activeCues, createChunks, cueId, FREE_CUE_LIMIT, mergeImportedCues, normalizeSite, parseCueImport, validateCue } from '../../src/lib/glossary';
+import { activeCues, createChunks, cueId, FREE_CUE_LIMIT, hasSiteCueCapacity, mergeImportedCues, normalizeSite, parseCueImport, validateCue } from '../../src/lib/glossary';
 import type { Cue, ReaderChunk } from '../../src/lib/types';
 
 type PendingSelection = { text: string; url: string; capturedAt: number; openCueForm?: boolean };
@@ -173,14 +173,14 @@ async function saveCue(event: SubmitEvent): Promise<void> {
   const error = validateCue(term, sayAs);
   if (error) { $('cue-error').textContent = error; return; }
   const editingId = ($<HTMLInputElement>('cue-id')).value;
-  if (!editingId && state.cues.length >= FREE_CUE_LIMIT) {
+  const existing = state.cues.find((cue) => cue.id === editingId || (!editingId && cue.term.toLocaleLowerCase() === term.toLocaleLowerCase() && cue.site === state.site));
+  if (!existing && !hasSiteCueCapacity(state.cues, state.site)) {
     $('cue-error').textContent = `This site glossary holds ${FREE_CUE_LIMIT} cues. Export a backup, delete a cue, or save the cue on another site.`;
     return;
   }
   const now = Date.now();
-  const existing = state.cues.find((cue) => cue.id === editingId);
-  const next: Cue = { id: editingId || cueId(term, state.site), term, sayAs, site: state.site, scope: 'site', createdAt: existing?.createdAt ?? now, updatedAt: now };
-  state.cues = state.cues.filter((cue) => cue.id !== editingId && !(cue.term.toLocaleLowerCase() === term.toLocaleLowerCase() && cue.site === state.site));
+  const next: Cue = { id: existing?.id ?? cueId(term, state.site), term, sayAs, site: state.site, scope: 'site', createdAt: existing?.createdAt ?? now, updatedAt: now };
+  state.cues = state.cues.filter((cue) => cue.id !== existing?.id && !(cue.term.toLocaleLowerCase() === term.toLocaleLowerCase() && cue.site === state.site));
   state.cues.push(next); await persistCues(); ($<HTMLFormElement>('cue-form')).hidden = true; renderCues(); renderReader(); showToast('Cue saved on this device.');
 }
 

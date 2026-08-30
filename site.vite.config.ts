@@ -11,8 +11,10 @@ export default defineConfig({
     rollupOptions: {
       input: {
         index: resolve('site/index.html'),
+        demo: resolve('site/demo/index.html'),
         privacy: resolve('site/privacy/index.html'),
-        terms: resolve('site/terms/index.html')
+        terms: resolve('site/terms/index.html'),
+        notFound: resolve('site/404.html')
       }
     }
   }

@@ -1,8 +1,9 @@
 import { test, expect, chromium } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
+import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 
-test('@claim:site-cue-limit extension popup supports a keyboard-friendly cue flow', async ({}, testInfo) => {
+test('@claim:site-cue-limit @claim:keyboard-reader extension popup supports a keyboard-friendly cue flow', async ({}, testInfo) => {
   test.skip(testInfo.project.name !== 'desktop', 'The extension package only needs one Chromium smoke test.');
   const extensionPath = resolve('dist/extension');
   const context = await chromium.launchPersistentContext('', {
@@ -14,16 +15,34 @@ test('@claim:site-cue-limit extension popup supports a keyboard-friendly cue flo
     let worker = context.serviceWorkers()[0];
     if (!worker) worker = await context.waitForEvent('serviceworker');
     const extensionId = new URL(worker.url()).host;
+    await worker.evaluate(async () => {
+      const oneSiteCues = Array.from({ length: 20 }, (_, index) => ({
+        id: `one.example:term-${index}`,
+        term: `Term ${index}`,
+        sayAs: `term ${index}`,
+        site: 'one.example',
+        scope: 'site',
+        createdAt: index,
+        updatedAt: index
+      }));
+      await chrome.storage.local.set({
+        cues: oneSiteCues,
+        pendingSelection: {
+          text: 'PostgreSQL needs a cue.',
+          url: 'https://two.example/guide',
+          capturedAt: Date.now()
+        }
+      });
+    });
     const page = await context.newPage();
     const errors: string[] = [];
     page.on('pageerror', (error) => errors.push(error.message));
     await page.goto(`chrome-extension://${extensionId}/popup.html`);
     await expect(page.getByRole('heading', { level: 1, name: 'Read this selection' })).toBeVisible();
+    await expect(page.locator('#site-pill')).toHaveText('two.example');
     await page.keyboard.press('Tab');
     await expect(page.locator(':focus')).toHaveAttribute('href', '#main');
-    await page.keyboard.press('Tab');
-    await page.keyboard.press('Tab');
-    await page.keyboard.press('Tab');
+    await page.getByRole('button', { name: 'Add cue', exact: true }).focus();
     await expect(page.locator(':focus')).toHaveAttribute('id', 'new-cue');
     expect((await page.getByRole('button', { name: 'Add cue', exact: true }).boundingBox())?.height).toBeGreaterThanOrEqual(44);
     await page.keyboard.press('Enter');
@@ -34,14 +53,17 @@ test('@claim:site-cue-limit extension popup supports a keyboard-friendly cue flo
     await expect(page.getByText('Kubernetes', { exact: true })).toBeVisible();
     expect((await page.getByRole('button', { name: 'Edit Kubernetes' }).boundingBox())?.height).toBeGreaterThanOrEqual(44);
     expect((await page.getByRole('button', { name: 'Delete Kubernetes' }).boundingBox())?.height).toBeGreaterThanOrEqual(44);
+    let saved = await worker.evaluate(async () => (await chrome.storage.local.get('cues')).cues);
+    expect(saved.filter((item: { site: string }) => item.site === 'one.example')).toHaveLength(20);
+    expect(saved.filter((item: { site: string }) => item.site === 'two.example')).toHaveLength(1);
+
     await page.locator('.tools summary').click();
-    const backup: Array<{ term: string; sayAs: string; site: string; scope?: 'everywhere' }> = Array.from({ length: 21 }, (_, index) => ({ term: `Term ${index}`, sayAs: `term ${index}`, site: 'example.com' }));
-    backup.push({ term: 'Everywhere', sayAs: 'everywhere', site: 'example.com', scope: 'everywhere' });
+    const backup: Array<{ term: string; sayAs: string; site: string }> = Array.from({ length: 21 }, (_, index) => ({ term: `Imported ${index}`, sayAs: `imported ${index}`, site: 'three.example' }));
     await page.locator('#import-file').setInputFiles({ name: 'cue-backup.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(backup)) });
-    await expect(page.locator('#toast')).toContainText('19 imported; 1 every-site cue uses an unsupported every-site scope; 2 cues exceed the 20-cue free limit.');
-    const saved = await worker.evaluate(async () => (await chrome.storage.local.get('cues')).cues);
-    expect(saved).toHaveLength(20);
-    expect(saved.some((item: { scope: string }) => item.scope === 'everywhere')).toBe(false);
+    await expect(page.locator('#toast')).toContainText('20 imported; 1 cue exceeds the 20-cue free limit.');
+    saved = await worker.evaluate(async () => (await chrome.storage.local.get('cues')).cues);
+    expect(saved).toHaveLength(41);
+    expect(saved.filter((item: { site: string }) => item.site === 'three.example')).toHaveLength(20);
     const result = await new AxeBuilder({ page }).analyze();
     expect(result.violations.filter((item) => ['serious', 'critical'].includes(item.impact ?? ''))).toEqual([]);
     expect(errors).toEqual([]);
@@ -50,7 +72,7 @@ test('@claim:site-cue-limit extension popup supports a keyboard-friendly cue flo
   }
 });
 
-test('@claim:local-reader-data active reading exposes its current chunk and genuinely pauses and resumes', async ({}, testInfo) => {
+test('@claim:local-reader-data @claim:selected-reading active reading exposes its current chunk and genuinely pauses and resumes', async ({}, testInfo) => {
   test.skip(testInfo.project.name !== 'desktop', 'The extension package only needs one Chromium smoke test.');
   const extensionPath = resolve('dist/extension');
   const context = await chromium.launchPersistentContext('', {
@@ -63,6 +85,15 @@ test('@claim:local-reader-data active reading exposes its current chunk and genu
     if (!worker) worker = await context.waitForEvent('serviceworker');
     await worker.evaluate(async () => {
       await chrome.storage.local.set({
+        cues: [{
+          id: 'docs.example.org:Kubernetes',
+          term: 'Kubernetes',
+          sayAs: 'koo-ber-net-ees',
+          site: 'docs.example.org',
+          scope: 'site',
+          createdAt: 1,
+          updatedAt: 1
+        }],
         pendingSelection: {
           text: 'Kubernetes helps PostgreSQL.',
           url: 'https://docs.example.org/guide',
@@ -91,6 +122,7 @@ test('@claim:local-reader-data active reading exposes its current chunk and genu
     });
     await page.goto(`chrome-extension://${extensionId}/popup.html`);
     await expect(page.locator('.chunk')).toHaveCount(1);
+    await expect(page.locator('.chunk')).toHaveAttribute('title', 'Will be spoken as: koo-ber-net-ees helps PostgreSQL.');
     await page.getByRole('button', { name: 'Read aloud' }).click();
     const currentChunk = page.locator('.chunk.current');
     await expect(currentChunk).toHaveAttribute('aria-current', 'true');
@@ -111,6 +143,42 @@ test('@claim:local-reader-data active reading exposes its current chunk and genu
     const result = await new AxeBuilder({ page }).analyze();
     expect(result.violations.filter((item) => ['serious', 'critical'].includes(item.impact ?? ''))).toEqual([]);
     expect(errors).toEqual([]);
+    expect(requests.every((url) => url.startsWith(`chrome-extension://${extensionId}/`))).toBe(true);
+  } finally {
+    await context.close();
+  }
+});
+
+test('@claim:backup-export exports a user-requested JSON backup without a network request', async ({}, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop', 'The extension package only needs one Chromium smoke test.');
+  const extensionPath = resolve('dist/extension');
+  const context = await chromium.launchPersistentContext('', {
+    channel: 'chromium',
+    headless: true,
+    args: [`--disable-extensions-except=${extensionPath}`, `--load-extension=${extensionPath}`]
+  });
+  try {
+    let worker = context.serviceWorkers()[0];
+    if (!worker) worker = await context.waitForEvent('serviceworker');
+    const extensionId = new URL(worker.url()).host;
+    const page = await context.newPage();
+    const requests: string[] = [];
+    page.on('request', (request) => requests.push(request.url()));
+    await page.goto(`chrome-extension://${extensionId}/popup.html`);
+    await page.getByRole('button', { name: 'Add cue' }).click();
+    await page.getByLabel('Word or phrase').fill('Nguyen');
+    await page.getByLabel('Say it like').fill('nwin');
+    await page.getByRole('button', { name: 'Save cue' }).click();
+    await page.locator('.tools summary').click();
+    const [download] = await Promise.all([
+      page.waitForEvent('download'),
+      page.getByRole('button', { name: 'Export' }).click()
+    ]);
+    const downloadPath = await download.path();
+    expect(downloadPath).not.toBeNull();
+    expect(JSON.parse(readFileSync(downloadPath!, 'utf8'))).toEqual(expect.arrayContaining([
+      expect.objectContaining({ term: 'Nguyen', sayAs: 'nwin' })
+    ]));
     expect(requests.every((url) => url.startsWith(`chrome-extension://${extensionId}/`))).toBe(true);
   } finally {
     await context.close();
