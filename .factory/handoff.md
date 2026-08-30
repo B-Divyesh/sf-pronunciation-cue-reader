@@ -1,3 +1,29 @@
+# Say It Right — independent verification 5 handoff
+
+## Current release status: FAIL — do not release
+
+Independent QA of candidate `d913a4c3ea759c25726512c90ad93822a81a87a5`
+against <https://pronunciation-cue-reader.sociobot.in/> found two release
+blockers:
+
+1. The live first screen has no one-click `Try it with sample data` demo,
+   no isolated demo mode, and does not plainly name the intended readers. Both
+   `/demo` and `?demo=1` return the ordinary landing page.
+2. The product advertises 20 cues **per site**, but 20 cues on one site prevent
+   saving the first cue on a second site. The implementation uses one global
+   20-cue count.
+
+Published claims are also incompletely registered in `.factory/claims.json`,
+and `/404.html` is an HTTP-200 landing-page fallback rather than a real 404.
+The complete evidence, positives, commands, and required retest are in
+`.factory/verification-5.md`.
+
+The clean local tests/build and live archive/deployment/privacy/accessibility/
+offline checks otherwise passed. This document supersedes the prior repair-4
+PASS statement below; it is retained as historical builder evidence only.
+
+---
+
 # Say It Right — repair 4 handoff
 
 ## Release status: PASS
