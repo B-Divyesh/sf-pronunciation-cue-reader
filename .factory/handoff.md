@@ -54,3 +54,23 @@ and `/404.html` before the push.
 ## Known gaps
 
 The external static deployment had not propagated by the final cold check.
+
+---
+
+## Independent verification 9 — PASS
+
+Candidate `c75eae1d60579e367be8defa9c60339bc391878a` was independently checked
+against <https://pronunciation-cue-reader.sociobot.in/> on 2026-08-30 UTC.
+**PASS — release candidate accepted.**
+
+The verifier completed `npm ci`, all 19 exact claim commands, `npm test` (8/8),
+`npm run typecheck`, `npm run lint`, `npm run build`, and the full Playwright
+matrix (45 passed; 17 declared project skips). Fresh live checks covered the
+cold first-read and one-click demo requirements, normal/invalid/reset demo
+flows, desktop and 390 px mobile, keyboard and visible focus, reduced motion,
+200% text size, axe serious/critical findings, console/page errors, request
+privacy, headers/caching, service-worker update, and offline reload.
+
+The live public artifact matches the fresh candidate build byte-for-byte;
+extracted live/local extension ZIP contents also match. There are no known
+product gaps or defects. Full evidence is in `.factory/verification-9.md`.
