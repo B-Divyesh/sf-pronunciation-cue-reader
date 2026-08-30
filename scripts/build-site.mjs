@@ -18,7 +18,7 @@ execFileSync('cp', ['-R', extensionDir, 'dist/extension']);
 mkdirSync(join(siteDir, 'downloads'), { recursive: true });
 execFileSync('zip', ['-q', '-r', '../site/downloads/say-it-right.zip', '.'], { cwd: 'dist/extension' });
 
-const heroAssets = ['pronunciation-field.webp', 'pronunciation-field.jpg'].map((filename) => {
+const brandedAssets = ['pronunciation-field.webp', 'pronunciation-field.jpg', 'say-it-right-social.jpg'].map((filename) => {
   const path = join(siteDir, 'assets', filename);
   if (!existsSync(path)) throw new Error(`Expected ${filename} was not emitted.`);
   const hash = createHash('sha256').update(readFileSync(path)).digest('hex').slice(0, 12);
@@ -26,10 +26,9 @@ const heroAssets = ['pronunciation-field.webp', 'pronunciation-field.jpg'].map((
   renameSync(path, join(siteDir, 'assets', hashedName));
   return [filename, hashedName];
 });
-for (const page of ['index.html']) {
-  const path = join(siteDir, page);
+for (const path of walk(siteDir).filter((candidate) => candidate.endsWith('.html'))) {
   let html = readFileSync(path, 'utf8');
-  for (const [filename, hashedName] of heroAssets) html = html.replaceAll(`/assets/${filename}`, `/assets/${hashedName}`);
+  for (const [filename, hashedName] of brandedAssets) html = html.replaceAll(`/assets/${filename}`, `/assets/${hashedName}`);
   writeFileSync(path, html);
 }
 

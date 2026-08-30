@@ -62,6 +62,15 @@ test('@claim:demo-sandbox the one-click sample reader is isolated, resettable, a
   expect(await page.evaluate(() => localStorage.getItem('demo:pronunciation-cue-reader:cues'))).toBeNull();
 });
 
+test('@claim:no-account-demo opens the working sample reader without an account', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('input[type="email"], input[type="password"]')).toHaveCount(0);
+  await page.getByRole('link', { name: 'Try it with sample data' }).click();
+  await expect(page).toHaveURL(/\/demo\/$/);
+  await expect(page.locator('#demo-passage')).toContainText('Kubernetes');
+  await expect(page.locator('input[type="email"], input[type="password"]')).toHaveCount(0);
+});
+
 test('@claim:source-preserving demo keeps displayed selected text separate from its spoken cue output', async ({ page }) => {
   await page.goto('/demo/');
   await expect(page.locator('#demo-passage')).toHaveText('The Kubernetes team stores release notes in PostgreSQL. NASA keeps a glossary for new contributors.');
@@ -81,6 +90,49 @@ test('legal pages are present and linked', async ({ page }) => {
   await expect(page.getByRole('heading', { level: 1, name: 'Privacy' })).toBeVisible();
   await page.goto('/terms/');
   await expect(page.getByRole('heading', { level: 1, name: 'Terms of use' })).toBeVisible();
+});
+
+test('every public route has canonical, social-card, and Apple-touch metadata', async ({ page }) => {
+  const routes = [
+    { path: '/', canonical: 'https://pronunciation-cue-reader.sociobot.in/' },
+    { path: '/demo/', canonical: 'https://pronunciation-cue-reader.sociobot.in/demo/' },
+    { path: '/privacy/', canonical: 'https://pronunciation-cue-reader.sociobot.in/privacy/' },
+    { path: '/terms/', canonical: 'https://pronunciation-cue-reader.sociobot.in/terms/' },
+    { path: '/404.html', canonical: 'https://pronunciation-cue-reader.sociobot.in/404.html' }
+  ];
+
+  for (const [index, route] of routes.entries()) {
+    await page.goto(route.path);
+    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute('href', route.canonical);
+    await expect(page.locator('meta[property="og:type"]')).toHaveAttribute('content', 'website');
+    await expect(page.locator('meta[property="og:url"]')).toHaveAttribute('content', route.canonical);
+    await expect(page.locator('meta[property="og:title"]')).not.toHaveAttribute('content', '');
+    await expect(page.locator('meta[property="og:description"]')).not.toHaveAttribute('content', '');
+    await expect(page.locator('meta[property="og:image"]')).toHaveAttribute('content', /^https:\/\/pronunciation-cue-reader\.sociobot\.in\/assets\/say-it-right-social-[a-f0-9]{12}\.jpg$/);
+    await expect(page.locator('meta[property="og:image:width"]')).toHaveAttribute('content', '1200');
+    await expect(page.locator('meta[property="og:image:height"]')).toHaveAttribute('content', '630');
+    await expect(page.locator('meta[name="twitter:card"]')).toHaveAttribute('content', 'summary_large_image');
+    await expect(page.locator('meta[name="twitter:title"]')).not.toHaveAttribute('content', '');
+    await expect(page.locator('meta[name="twitter:description"]')).not.toHaveAttribute('content', '');
+    await expect(page.locator('meta[name="twitter:image"]')).toHaveAttribute('content', /^https:\/\/pronunciation-cue-reader\.sociobot\.in\/assets\/say-it-right-social-[a-f0-9]{12}\.jpg$/);
+    await expect(page.locator('link[rel="apple-touch-icon"]')).toHaveAttribute('href', '/apple-touch-icon.png');
+
+    if (index === 0) {
+      const imagePath = new URL((await page.locator('meta[property="og:image"]').getAttribute('content'))!).pathname;
+      expect(await page.evaluate((source) => new Promise<{ width: number; height: number }>((resolve, reject) => {
+        const image = new Image();
+        image.onload = () => resolve({ width: image.naturalWidth, height: image.naturalHeight });
+        image.onerror = () => reject(new Error('Social image did not load.'));
+        image.src = source;
+      }), imagePath)).toEqual({ width: 1200, height: 630 });
+      expect(await page.evaluate(() => new Promise<{ width: number; height: number }>((resolve, reject) => {
+        const image = new Image();
+        image.onload = () => resolve({ width: image.naturalWidth, height: image.naturalHeight });
+        image.onerror = () => reject(new Error('Apple touch icon did not load.'));
+        image.src = '/apple-touch-icon.png';
+      }))).toEqual({ width: 180, height: 180 });
+    }
+  }
 });
 
 test('ships a styled 404 document with a static-host response override', async ({ page }) => {

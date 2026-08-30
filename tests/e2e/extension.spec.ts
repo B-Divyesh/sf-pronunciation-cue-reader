@@ -1,7 +1,8 @@
 import { test, expect, chromium } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { join, resolve } from 'node:path';
+import { CONTEXT_MENU_ID, CONTEXT_MENU_TITLE, handleSelectionContextMenu } from '../../src/lib/context-menu';
 
 test('@claim:site-cue-limit @claim:keyboard-reader extension popup supports a keyboard-friendly cue flow', async ({}, testInfo) => {
   test.skip(testInfo.project.name !== 'desktop', 'The extension package only needs one Chromium smoke test.');
@@ -272,6 +273,238 @@ test('@claim:pending-selection-expiry expired selected passages are deleted befo
     const page = await context.newPage();
     await page.goto(`chrome-extension://${extensionId}/popup.html`);
     await expect.poll(() => worker.evaluate(async () => (await chrome.storage.local.get('pendingSelection')).pendingSelection)).toBeUndefined();
+  } finally {
+    await context.close();
+  }
+});
+
+test('@claim:installed-voice-preview previews a cue with the chosen installed voice', async ({}, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop', 'The extension package only needs one Chromium voice test.');
+  const extensionPath = resolve('dist/extension');
+  const context = await chromium.launchPersistentContext('', {
+    channel: 'chromium',
+    headless: true,
+    args: [`--disable-extensions-except=${extensionPath}`, `--load-extension=${extensionPath}`]
+  });
+  try {
+    let worker = context.serviceWorkers()[0];
+    if (!worker) worker = await context.waitForEvent('serviceworker');
+    await worker.evaluate(async () => {
+      await chrome.storage.local.set({ pendingSelection: { text: 'Preview PostgreSQL.', url: 'https://docs.example.org/guide', capturedAt: Date.now() } });
+    });
+    const extensionId = new URL(worker.url()).host;
+    const page = await context.newPage();
+    await page.addInitScript(() => {
+      const calls: Array<{ text: string; voiceURI?: string }> = [];
+      const voice = { default: true, lang: 'en-GB', localService: true, name: 'Local test voice', voiceURI: 'local-test-voice' } as SpeechSynthesisVoice;
+      class TestUtterance extends EventTarget {
+        text: string;
+        voice: SpeechSynthesisVoice | null = null;
+        rate = 1;
+        onend: (() => void) | null = null;
+        onerror: (() => void) | null = null;
+        constructor(text: string) { super(); this.text = text; }
+      }
+      const speech = new EventTarget() as EventTarget & SpeechSynthesis;
+      Object.assign(speech, {
+        cancel: () => undefined,
+        getVoices: () => [voice],
+        pause: () => undefined,
+        resume: () => undefined,
+        speak: (utterance: SpeechSynthesisUtterance) => calls.push({ text: utterance.text, voiceURI: utterance.voice?.voiceURI })
+      });
+      Object.defineProperty(window, 'SpeechSynthesisUtterance', { configurable: true, value: TestUtterance });
+      Object.defineProperty(window, 'speechSynthesis', { configurable: true, value: speech });
+      Object.defineProperty(window, '__sayItRightVoiceCalls', { configurable: true, value: calls });
+    });
+    await page.goto(`chrome-extension://${extensionId}/popup.html`);
+    await page.getByRole('button', { name: 'Add cue', exact: true }).click();
+    await page.getByLabel('Say it like').fill('post-gress cue ell');
+    await page.getByLabel('Voice').selectOption('local-test-voice');
+    await page.getByRole('button', { name: 'Preview pronunciation' }).click();
+    await expect.poll(() => page.evaluate(() => (window as typeof window & { __sayItRightVoiceCalls: Array<{ text: string; voiceURI?: string }> }).__sayItRightVoiceCalls)).toEqual([
+      { text: 'post-gress cue ell', voiceURI: 'local-test-voice' }
+    ]);
+  } finally {
+    await context.close();
+  }
+});
+
+test('@claim:installed-extension-offline reads and saves a cue with the browser offline', async ({}, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop', 'The extension package only needs one Chromium offline test.');
+  const extensionPath = resolve('dist/extension');
+  const context = await chromium.launchPersistentContext('', {
+    channel: 'chromium',
+    headless: true,
+    args: [`--disable-extensions-except=${extensionPath}`, `--load-extension=${extensionPath}`]
+  });
+  try {
+    let worker = context.serviceWorkers()[0];
+    if (!worker) worker = await context.waitForEvent('serviceworker');
+    await worker.evaluate(async () => {
+      await chrome.storage.local.set({
+        pendingSelection: {
+          text: 'Kubernetes stays available offline.',
+          url: 'https://offline.example/guide',
+          capturedAt: Date.now()
+        }
+      });
+    });
+    const extensionId = new URL(worker.url()).host;
+    await context.setOffline(true);
+    const page = await context.newPage();
+    const requests: string[] = [];
+    page.on('request', (request) => requests.push(request.url()));
+    await page.addInitScript(() => {
+      const calls: string[] = [];
+      const speech = new EventTarget() as EventTarget & SpeechSynthesis;
+      Object.assign(speech, {
+        cancel: () => undefined,
+        getVoices: () => [],
+        pause: () => undefined,
+        resume: () => undefined,
+        speak: (utterance: SpeechSynthesisUtterance) => calls.push(utterance.text)
+      });
+      Object.defineProperty(window, 'speechSynthesis', { configurable: true, value: speech });
+      Object.defineProperty(window, '__sayItRightOfflineCalls', { configurable: true, value: calls });
+    });
+    await page.goto(`chrome-extension://${extensionId}/popup.html`);
+    await expect(page.locator('#chunks')).toContainText('Kubernetes stays available offline.');
+    await page.getByRole('button', { name: 'Read aloud' }).click();
+    await expect.poll(() => page.evaluate(() => (window as typeof window & { __sayItRightOfflineCalls: string[] }).__sayItRightOfflineCalls.length)).toBe(1);
+    await page.getByRole('button', { name: 'Add cue', exact: true }).click();
+    await page.getByLabel('Word or phrase').fill('Kubernetes');
+    await page.getByLabel('Say it like').fill('koo-ber-net-ees');
+    await page.getByRole('button', { name: 'Save cue' }).click();
+    await expect.poll(() => worker.evaluate(async () => (await chrome.storage.local.get('cues')).cues?.[0]?.sayAs)).toBe('koo-ber-net-ees');
+    expect(requests.every((url) => url.startsWith(`chrome-extension://${extensionId}/`))).toBe(true);
+  } finally {
+    await context.close();
+  }
+});
+
+test('@claim:extension-entry-points packages toolbar, shortcut, and selection context-menu entry', async ({}, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop', 'The package entry points only need one consumer check.');
+  const manifest = JSON.parse(readFileSync('dist/extension/manifest.json', 'utf8')) as {
+    action: { default_popup: string };
+    background: { service_worker: string };
+    commands: Record<string, { suggested_key: { default: string } }>;
+  };
+  expect(manifest.action.default_popup).toBe('popup.html');
+  expect(manifest.commands._execute_action!.suggested_key.default).toBe('Alt+Shift+S');
+  const background = readFileSync(join('dist/extension', manifest.background.service_worker), 'utf8');
+  expect(background).toContain(CONTEXT_MENU_ID);
+  expect(background).toContain('contextMenus.create');
+  expect(background).toContain('%s');
+  expect(CONTEXT_MENU_TITLE).toBe('Add pronunciation cue for “%s”');
+
+  const stored: unknown[] = [];
+  const badgeText: unknown[] = [];
+  const badgeColors: unknown[] = [];
+  let popupOpened = false;
+  const handled = await handleSelectionContextMenu(
+    { menuItemId: CONTEXT_MENU_ID, selectionText: 'PostgreSQL' },
+    { id: 9, url: 'https://docs.example.org/guide' },
+    {
+      now: () => 1234,
+      storePendingSelection: async (value) => { stored.push(value); },
+      setBadgeText: async (value) => { badgeText.push(value); },
+      setBadgeBackgroundColor: async (value) => { badgeColors.push(value); },
+      openPopup: async () => { popupOpened = true; }
+    }
+  );
+  expect(handled).toBe(true);
+  expect(stored).toEqual([{ pendingSelection: { text: 'PostgreSQL', url: 'https://docs.example.org/guide', capturedAt: 1234, openCueForm: true } }]);
+  expect(badgeText).toEqual([{ text: '1', tabId: 9 }]);
+  expect(badgeColors).toEqual([{ color: '#D84A2F' }]);
+  expect(popupOpened).toBe(true);
+});
+
+test('@claim:per-site-local-glossary keeps saved cues in extension storage and scoped to their sites', async ({}, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop', 'The extension package only needs one Chromium storage test.');
+  const extensionPath = resolve('dist/extension');
+  const context = await chromium.launchPersistentContext('', {
+    channel: 'chromium',
+    headless: true,
+    args: [`--disable-extensions-except=${extensionPath}`, `--load-extension=${extensionPath}`]
+  });
+  try {
+    let worker = context.serviceWorkers()[0];
+    if (!worker) worker = await context.waitForEvent('serviceworker');
+    await worker.evaluate(async () => {
+      await chrome.storage.local.set({
+        cues: [{ id: 'one.example:NASA', term: 'NASA', sayAs: 'nass-uh', site: 'one.example', scope: 'site', createdAt: 1, updatedAt: 1 }],
+        pendingSelection: { text: 'Nguyen joined.', url: 'https://two.example/people', capturedAt: Date.now() }
+      });
+    });
+    const extensionId = new URL(worker.url()).host;
+    const page = await context.newPage();
+    const requests: string[] = [];
+    page.on('request', (request) => requests.push(request.url()));
+    await page.goto(`chrome-extension://${extensionId}/popup.html`);
+    await expect(page.locator('#cue-list')).not.toContainText('NASA');
+    await page.getByRole('button', { name: 'Add cue', exact: true }).click();
+    await page.getByLabel('Word or phrase').fill('Nguyen');
+    await page.getByLabel('Say it like').fill('nwin');
+    await page.getByRole('button', { name: 'Save cue' }).click();
+    const cues = await worker.evaluate(async () => (await chrome.storage.local.get('cues')).cues);
+    expect(cues).toEqual(expect.arrayContaining([
+      expect.objectContaining({ term: 'NASA', site: 'one.example' }),
+      expect.objectContaining({ term: 'Nguyen', sayAs: 'nwin', site: 'two.example', scope: 'site' })
+    ]));
+    expect(requests.every((url) => url.startsWith(`chrome-extension://${extensionId}/`))).toBe(true);
+  } finally {
+    await context.close();
+  }
+});
+
+test('@claim:cue-lifecycle adds, previews, edits, and deletes a pronunciation cue', async ({}, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop', 'The extension package only needs one Chromium cue lifecycle test.');
+  const extensionPath = resolve('dist/extension');
+  const context = await chromium.launchPersistentContext('', {
+    channel: 'chromium',
+    headless: true,
+    args: [`--disable-extensions-except=${extensionPath}`, `--load-extension=${extensionPath}`]
+  });
+  try {
+    let worker = context.serviceWorkers()[0];
+    if (!worker) worker = await context.waitForEvent('serviceworker');
+    await worker.evaluate(async () => {
+      await chrome.storage.local.set({ pendingSelection: { text: 'Read PostgreSQL.', url: 'https://docs.example.org/guide', capturedAt: Date.now() } });
+    });
+    const extensionId = new URL(worker.url()).host;
+    const page = await context.newPage();
+    await page.addInitScript(() => {
+      const calls: string[] = [];
+      const speech = new EventTarget() as EventTarget & SpeechSynthesis;
+      Object.assign(speech, {
+        cancel: () => undefined,
+        getVoices: () => [],
+        pause: () => undefined,
+        resume: () => undefined,
+        speak: (utterance: SpeechSynthesisUtterance) => calls.push(utterance.text)
+      });
+      Object.defineProperty(window, 'speechSynthesis', { configurable: true, value: speech });
+      Object.defineProperty(window, '__sayItRightPreviewCalls', { configurable: true, value: calls });
+    });
+    await page.goto(`chrome-extension://${extensionId}/popup.html`);
+    await page.getByRole('button', { name: 'Add cue', exact: true }).click();
+    await page.getByLabel('Word or phrase').fill('PostgreSQL');
+    await page.getByLabel('Say it like').fill('post-gress cue ell');
+    await page.getByRole('button', { name: 'Preview pronunciation' }).click();
+    await expect.poll(() => page.evaluate(() => (window as typeof window & { __sayItRightPreviewCalls: string[] }).__sayItRightPreviewCalls)).toContain('post-gress cue ell');
+    await page.getByRole('button', { name: 'Save cue' }).click();
+    await expect(page.getByText('PostgreSQL', { exact: true })).toBeVisible();
+
+    await page.getByRole('button', { name: 'Edit PostgreSQL' }).click();
+    await page.getByLabel('Say it like').fill('post-gres-queue-ell');
+    await page.getByRole('button', { name: 'Save cue' }).click();
+    await expect.poll(() => worker.evaluate(async () => (await chrome.storage.local.get('cues')).cues?.[0]?.sayAs)).toBe('post-gres-queue-ell');
+
+    page.once('dialog', (dialog) => dialog.accept());
+    await page.getByRole('button', { name: 'Delete PostgreSQL' }).click();
+    await expect(page.getByText('PostgreSQL', { exact: true })).toHaveCount(0);
+    await expect.poll(() => worker.evaluate(async () => (await chrome.storage.local.get('cues')).cues)).toEqual([]);
   } finally {
     await context.close();
   }

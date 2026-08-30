@@ -98,4 +98,6 @@ Production prompt:
 
 Generated with the factory image deployment (`/opt/fleet/lib/gen-image.sh`) on
 2026-08-28. Original output and prompt sidecar live in `assets/src/`; optimized
-WebP ships with the site. Generated imagery is disclosed in the footer.
+WebP ships with the site. The 1200×630 social card is a center crop of that
+same original artwork; the 180px Apple touch icon is derived from the
+hand-authored product icon. Generated imagery is disclosed in the footer.

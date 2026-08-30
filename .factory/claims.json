@@ -68,5 +68,47 @@
     "where": "privacy page",
     "test": "npm run test:e2e -- --grep @claim:site-no-trackers",
     "sandbox": "fresh browser page load; record requests and assert they are all same-origin"
+  },
+  {
+    "id": "no-account-demo",
+    "claim": "Visitors can open the working sample reader without creating an account.",
+    "where": "landing first screen",
+    "test": "npm run test:e2e -- --grep @claim:no-account-demo",
+    "sandbox": "fresh browser page clicks Try it with sample data, reaches the seeded reader, and asserts no email or password control is required"
+  },
+  {
+    "id": "installed-voice-preview",
+    "claim": "Previews a cue with a voice already installed in the browser.",
+    "where": "landing page, README",
+    "test": "npm run test:e2e -- --grep @claim:installed-voice-preview",
+    "sandbox": "fresh Chromium extension profile with a controlled installed voice; choose that voice, preview a cue, and assert the spoken text and selected voice"
+  },
+  {
+    "id": "installed-extension-offline",
+    "claim": "The installed extension reads selected text and saves cues while offline.",
+    "where": "landing offline banner",
+    "test": "npm run test:e2e -- --grep @claim:installed-extension-offline",
+    "sandbox": "fresh Chromium extension profile switched offline before popup load; read seeded selected text, save a cue, and assert extension-local storage with no network request"
+  },
+  {
+    "id": "extension-entry-points",
+    "claim": "Opens from the Chrome toolbar, Alt+Shift+S, or the selected-text context menu.",
+    "where": "README",
+    "test": "npm run test:e2e -- --grep @claim:extension-entry-points",
+    "sandbox": "fresh packaged extension; assert the toolbar popup and shortcut manifest entries, the registered selection-menu entry, and the context-menu handoff that opens the cue form"
+  },
+  {
+    "id": "per-site-local-glossary",
+    "claim": "Stores a private per-site pronunciation glossary in extension-local storage.",
+    "where": "README",
+    "test": "npm run test:e2e -- --grep @claim:per-site-local-glossary",
+    "sandbox": "fresh Chromium extension profile; retain one cue for one.example, save another on two.example, assert both site scopes in chrome.storage.local, and reject non-extension requests"
+  },
+  {
+    "id": "cue-lifecycle",
+    "claim": "Adds, previews, edits, and deletes pronunciation cues.",
+    "where": "README",
+    "test": "npm run test:e2e -- --grep @claim:cue-lifecycle",
+    "sandbox": "fresh Chromium extension profile; add and preview a cue, edit its spoken form, delete it, and assert extension storage after each change"
   }
 ]
