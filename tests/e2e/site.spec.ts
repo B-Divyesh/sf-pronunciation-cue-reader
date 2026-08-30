@@ -87,8 +87,10 @@ test('ships a styled 404 document with a static-host response override', async (
   await page.goto('/404.html');
   await expect(page.getByRole('heading', { level: 1, name: 'That page is not here.' })).toBeVisible();
   const config = JSON.parse(readFileSync('dist/site/staticwebapp.config.json', 'utf8')) as {
+    navigationFallback?: unknown;
     responseOverrides: Record<string, { rewrite: string; statusCode: number }>;
   };
+  expect(config.navigationFallback).toBeUndefined();
   expect(config.responseOverrides['404']).toEqual({ rewrite: '/404.html', statusCode: 404 });
 });
 
