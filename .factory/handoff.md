@@ -2,10 +2,11 @@
 
 ## Release status
 
-**PASS locally; ready for deployment.** This repair clears every release
-blocker in independent verification report
+**PASS and deployed.** This repair clears every release blocker in independent
+verification report
 `.factory/verification-7.md` for candidate
-`c16c820d288eb0828721ae843824d1e1e7d7f965`.
+`c16c820d288eb0828721ae843824d1e1e7d7f965`. Repair commit `8b767b8` is pushed
+to `origin/main` and its static artifact is live.
 
 ## What was repaired
 
@@ -86,14 +87,38 @@ vulnerabilities):
 
 ## Deployment and live verification
 
-Deploy `dist/site` as the existing static application
-`sf-pronunciation-cue-reader` in `eastus2`. After deployment, verify the
-custom domain, packaged ZIP identity, headers, offline reload, and both
-desktop and 390 px browser views. The static site has no application backend,
-accounts, payments, tenant identity flow, or rate-limit endpoint; those checks
-do not apply.
+- Deployed `dist/site` with the configured Azure Static Web Apps CLI to the
+  existing production application `sf-pronunciation-cue-reader` in `eastus2`.
+  Azure returned the default host
+  `https://thankful-mushroom-02ba0b00f.7.azurestaticapps.net`; the existing
+  custom domain is `https://pronunciation-cue-reader.sociobot.in`.
+- `verify-url.sh` passed live home, demo, privacy, terms, and explicit 404 on
+  both hosts. Each had a title, `lang=en`, one `h1`, a `main` landmark, complete
+  image alternatives, and zero browser console/page errors. An unknown custom
+  URL returns HTTP 404 with the styled `That page is not here.` page.
+- Local, custom-domain, and Azure-default SHA-256 values match for home
+  (`54189ea3c9c8d732b3483d8d36d4a4b5652f00613383dfdaf74a8c3002fad828`), demo
+  (`0b6a526ae312c5aa7cba2095ac20d0f9fcfb804d9216666ad5411a15399cebfd`),
+  privacy (`f5604d32fb6e942960713fd2f037901d37e68a452afdf1edf832b5abab709aa1`),
+  terms (`606d4705446f88fb77d5d63ffcdfd0b886b7aae91e62d6018ee627a84cd7aa6f`),
+  and the downloadable extension ZIP
+  (`0732fdde3d6323fd47acede3675c7be5f00308076b25ce28fc53c21377b1bf0d`).
+- Fresh live Chromium checks passed on desktop and 390 px: zero serious or
+  critical axe findings across light/dark home, demo, privacy, terms, and 404;
+  first-tab skip-link focus; demo add/reset; no horizontal overflow; zero page
+  errors; and only same-origin requests.
+- A fresh live profile became service-worker controlled after reload,
+  `registration.update()` left no waiting worker, and an offline reload still
+  rendered the home heading.
+- Live response policy includes `connect-src 'self'`, response-header
+  `frame-ancestors 'none'`, HSTS, `strict-origin-when-cross-origin`, `nosniff`,
+  restrictive Permissions-Policy, immutable caching for hashed assets, and a
+  one-hour cache policy for the ZIP.
+
+This is a static extension download and landing site with no application
+backend, accounts, payments, tenant identity flow, or rate-limit endpoint;
+those checks do not apply.
 
 ## Known gaps
 
-None. The repair is locally verified and ready for the configured static
-deployment.
+None.
