@@ -87,13 +87,35 @@ git diff --check
   `frame-ancestors 'none'`, immutable asset caching, ZIP MIME type, and the
   new real 404 override.
 
-## Deployment and known gap
+## Deployment and live evidence
 
-Static deployment to the existing `sf-pronunciation-cue-reader` app is the
-remaining release step. This handoff will be amended with the live deployment
-and identity evidence after upload.
+- Pushed repair commits `4f4034c` and `fc42d4c` to `origin/main`.
+- Deployed the final static artifact to existing Static Web App
+  `sf-pronunciation-cue-reader` in `eastus2`: deployment
+  `4a348a39-a082-4e45-8d3f-7a069ef8ec73`. The default host is
+  `thankful-mushroom-02ba0b00f.7.azurestaticapps.net`; the live custom domain
+  is <https://pronunciation-cue-reader.sociobot.in/>.
+- Live `/`, `/demo/`, `/privacy/`, and `/terms/` all passed
+  `verify-url.sh`: HTTP 200, title/lang/one-h1/main/alt checks, and zero
+  console/page errors. A real unknown live path now returns **HTTP 404** and
+  renders `Page not found — Say It Right` with `That page is not here.`
+- Live desktop and 390px checks found zero overflow, no errors, a first-tab
+  skip link, same-origin-only requests, and zero serious/critical axe findings
+  on home plus demo in light and dark themes. A fresh live service-worker
+  profile was controller-owned after reload; `registration.update()` had no
+  waiting worker and an offline reload rendered the home h1 with no errors.
+- The deployed HTML matches the final build byte-for-byte: home SHA-256
+  `38cb380da6984ec7b0afab8bd00dd6ef623eccb4c2d55125fde4753d02f752a0`;
+  demo SHA-256
+  `d0c2b5a48990e847865efcf367d7a0d54eb46faeebd4ed52aeb909bea94d6541`.
+  The live hashed JavaScript sends `public, max-age=31536000, immutable`.
+  Headers include the expected CSP (`connect-src 'self'`,
+  `frame-ancestors 'none'`), Permissions-Policy, strict referrer policy,
+  HSTS, and `nosniff`.
+
+## Known gap
 
 No product gaps are known. Lighthouse was attempted locally; worker Chrome
 crashed during Lighthouse's full-page screenshot artifact after collecting a
 971 ms LCP and 0 CLS. The page itself had no console or axe failure, and all
-size, Playwright, and URL-verifier checks above passed.
+size, Playwright, URL-verifier, and live-browser checks above passed.
