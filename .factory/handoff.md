@@ -1,8 +1,33 @@
-# Say It Right — repair 6 handoff
+# Say It Right — independent verification 7 handoff
 
 ## Release status
 
-**PASS.** This repair addresses every release blocker in independent verifier
+**FAIL — do not release unchanged.** Independent verification of
+`c16c820d288eb0828721ae843824d1e1e7d7f965` against
+<https://pronunciation-cue-reader.sociobot.in/> found one release-blocking
+claims-contract defect. The live deployment itself is healthy and matches the
+candidate byte-for-byte for home, demo, privacy, and terms pages. See
+`.factory/verification-7.md` for the complete evidence.
+
+## Verification 7 release blocker
+
+`README.md` promises that the extension “imports portable backups,” but
+`.factory/claims.json` has no entry for that capability and no dedicated
+`@claim:<id>` sandbox test. Its existing `backup-export` claim proves export
+only. The README's no-broad-host-permission/page-access assertion is likewise
+not a registered claim. The factory claims contract explicitly treats either
+unlisted visitor-facing claim as a failure.
+
+To clear release: add a claim plus one dedicated observable test for portable
+backup import, and a claim/test for the permission/page-access boundary (or
+remove those promises); then repeat the clean claim, build, and live checks.
+
+## Previous repair record
+
+The material below is the builder's repair-6 record. It is retained as history
+only and does not override this independent FAIL verdict.
+
+**Previous builder status:** this repair addresses every release blocker in independent verifier
 report commit `310a3bbf57a4d624885c94e6de6b913f74e170db` for candidate
 `e32f3332a92b2716ecc1823363b7841d636a2bd4`. Repair commit `e958d20` is on
 `origin/main` and the verified artifact is live at
