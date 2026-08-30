@@ -1,88 +1,40 @@
-# Say It Right — independent verification 6 handoff
+# Say It Right — repair 6 handoff
 
 ## Release status
 
-**FAIL — do not release candidate `e32f3332a92b2716ecc1823363b7841d636a2bd4`
-unchanged.** Verified against <https://pronunciation-cue-reader.sociobot.in/>
-on 2026-08-30 UTC. Functional, privacy, accessibility, offline, build, and
-deployment checks pass, but mandatory claim coverage does not: the live site
-and README make visitor-facing promises that have no `.factory/claims.json`
-entry and no prescribed observable `@claim:` test.
+**PASS.** This repair addresses every release blocker in independent verifier
+report commit `310a3bbf57a4d624885c94e6de6b913f74e170db` for candidate
+`e32f3332a92b2716ecc1823363b7841d636a2bd4`. Repair commit `e958d20` is on
+`origin/main` and the verified artifact is live at
+<https://pronunciation-cue-reader.sociobot.in/>.
 
-### Defects
-
-- **High:** Unlisted claims include “No account,” installed-voice preview,
-  installed-extension offline behavior, toolbar/`Alt+Shift+S`/context-menu
-  entry, and local per-site cue workflow details. Register/test each or remove
-  the promise.
-- **Medium:** Home/demo/legal pages lack canonical, Open Graph, Twitter-card,
-  and Apple-touch metadata required by the site-structure contract.
-
-### Evidence
-
-- Every exact claim command passes independently; `npm test` is 8/8;
-  typecheck, lint, build, archive validation, and diff check pass. All 36
-  declared Playwright project tests pass in fresh file/project partitions
-  (27 passed, 9 intentional skips).
-- First read and one-click demo pass; the demo saves, resets, discards, and
-  isolates its `demo:` data.
-- Live desktop and 390 px checks found no console/page errors, overflow, or
-  serious/critical axe findings; keyboard focus, reduced motion, and offline
-  PWA reload/update work.
-- Live requests stayed same-origin only; headers are restrictive and cached
-  assets immutable. Home/demo HTML and extracted extension ZIP contents match
-  the candidate build.
-
-See `.factory/verification-6.md` for exact evidence and required retest.
-
----
-
-# Say It Right — repair 5 handoff
-
-## Release status
-
-**Local repair verification: PASS.** This repair addresses every blocker in
-`.factory/verification-5.md` for candidate
-`d913a4c3ea759c25726512c90ad93822a81a87a5`. Deployment evidence follows the
-static upload.
+The historical failure evidence remains in `.factory/verification-6.md`.
 
 ## Repairs
 
-1. Added `/demo/` and a first-screen **Try it with sample data** action. The
-   landing page now names dyslexic, low-vision, and language-learning readers.
-   The demo includes a realistic `docs.example.org` passage; Kubernetes,
-   PostgreSQL, and NASA cues; a read-aloud control; add-cue form; persistent
-   Demo banner; Reset demo; and Start for real.
-2. Demo storage is isolated to `demo:pronunciation-cue-reader:cues`. It never
-   reads extension storage, Reset demo restores the sample, and Start for real
-   removes the demo key.
-3. Corrected the 20-cue boundary in both `saveCue` and `mergeImportedCues`.
-   Both paths now count normalized-site cues. Twenty cues on `one.example` no
-   longer block saving a first cue on `two.example`.
-4. Registered the demo, limit, selected-reading, source-preserving, backup,
-   keyboard, accessibility, privacy, expiry, and no-tracker claims. Added
-   `.factory/demo.md` and exact tagged browser regressions for each.
-5. Added `404.html` and the Static Web Apps 404 response override. The
-   service-worker precache now includes `/demo/` and `/404.html`.
-6. Switched browser tests to full Chromium and one worker after reproducing a
-   worker-only headless-shell SIGSEGV. The suite is now stable in this worker.
+1. Registered the six promises the verifier found missing: account-free demo
+   access, installed-voice preview, installed-extension offline behavior,
+   toolbar/shortcut/context-menu entry, extension-local per-site storage, and
+   the add/preview/edit/delete cue lifecycle.
+2. Added one observable `@claim:<id>` Playwright regression for each new claim.
+   A source audit confirms all 16 claim IDs now occur in exactly one tagged
+   test, and every command in `.factory/claims.json` passes independently.
+3. Moved the selection context-menu handoff into `src/lib/context-menu.ts`.
+   Production and the package regression now use the same storage, badge, and
+   popup-opening path.
+4. Added canonical, Open Graph, Twitter-card, and Apple-touch metadata to `/`,
+   `/demo/`, `/privacy/`, `/terms/`, and `/404.html`.
+5. Added a 1200×630 social card cropped from the existing original generated
+   product artwork and a 180×180 touch icon derived from the hand-authored
+   product icon. Provenance is recorded in `.factory/design.md`. The build
+   content-hashes the social card and rewrites its URL on every HTML route.
 
-## Regression evidence
-
-- Unit regression covers 20 cues on one site plus a successful first cue on
-  another, and import merge capacity per normalized site.
-- `@claim:site-cue-limit` asserts 20/1/20 stored cues for three sites after a
-  keyboard save and 21-cue import.
-- `@claim:demo-sandbox` asserts the isolated `demo:` key, add/reset behavior,
-  Start for real discard behavior, and light/dark axe results.
-- `@claim:source-preserving` verifies unchanged displayed sample text with a
-  different exposed spoken cue. `@claim:backup-export` parses the downloaded
-  JSON and observes extension-local requests only.
-- Every command in `.factory/claims.json` was run independently and passed.
+No researched scope, artifact class, permissions, cue behavior, demo behavior,
+privacy boundary, visual treatment, or previously passing behavior was removed.
 
 ## Clean local verification
 
-Executed on 2026-08-30 UTC:
+Run on 2026-08-30 UTC from `/work/repo`:
 
 ```bash
 npm ci
@@ -95,66 +47,80 @@ unzip -t dist/site/downloads/say-it-right.zip
 git diff --check
 ```
 
-- `npm ci`: 187 packages, 0 audit vulnerabilities.
-- Unit: 8/8 passed. Typecheck and lint passed.
-- Build produced `dist/extension`, `dist/site`, and the linked extension ZIP.
-- Browser: 27 passed, 9 intentional project-specific skips. Desktop: 16
-  passed, 2 skips. 390px: 11 passed, 7 skips. Coverage includes popup
-  keyboard/read/pause/resume/stop/import/export; light/dark axe; demo
-  light/dark axe; 200% text; reduced motion; offline reload/update; privacy;
-  and touch targets.
-- Archive validation and `git diff --check` passed. Extension size is 33.37
-  KB; landing JS is 0.32 KB (0.22 KB gzip), landing CSS 13.77 KB (3.93 KB
-  gzip), demo JS 3.49 KB (1.65 KB gzip), and hero WebP 92,948 B.
-- `/opt/fleet/lib/verify-url.sh` passed local `/`, `/demo/`, `/privacy/`, and
-  `/terms/`: HTTP 200, title/lang/one-h1/main/alt checks, and zero console or
-  page errors. The standalone Selenium axe CLI could not launch Chrome in this
-  worker; the Playwright axe integration passed with zero serious/critical
-  findings across the tested views and themes.
-- A 390px screenshot review found no horizontal overflow and legible demo
-  controls, reader, glossary, and form.
+- `npm ci`: 187 packages installed; 0 audit vulnerabilities.
+- Unit tests: 8/8 passed. Typecheck and lint passed.
+- Production build produced `dist/extension`, `dist/site`, and the linked ZIP.
+- Full browser matrix: 36 passed, 14 intentional project-specific skips across
+  desktop Chromium and 390×844. It covers the real extension, package entry
+  points, keyboard/focus, speech controls, cue lifecycle, JSON backup, per-site
+  limits/storage, demo isolation, light/dark axe, 200% text, reduced motion,
+  offline/update, privacy, metadata, touch targets, and the static 404.
+- All 16 exact `.factory/claims.json` commands passed independently. Desktop
+  extension claims each reported 1 pass and the expected mobile skip; site
+  claims reported 2 passes except the intentionally viewport-specific claim.
+- ZIP integrity and `git diff --check` passed.
+- `/opt/fleet/lib/verify-url.sh` passed local home, demo, privacy, terms, and
+  404 documents. Every page had a title, `lang=en`, one `h1`, `main`, complete
+  image alternatives, labeled buttons, and zero console/page errors.
+- Playwright axe found zero serious/critical findings in the complete local
+  matrix. First Tab reaches the skip link, controls are keyboard-operable, and
+  the 390px/200%-text views have zero horizontal overflow.
+- A manual screenshot review covered desktop home plus 390px home/demo.
 
-## Privacy, offline, and response policy
+## Performance and artifact evidence
 
-- The demo key is separate from real reader data. Site requests remain
-  same-origin; reader/export requests remain `chrome-extension://` local.
-  No analytics, third-party code, or new permissions were added.
-- The manifest remains limited to `activeTab`, `storage`, `contextMenus`, and
-  `scripting`. The fresh-profile service-worker regression confirms offline
-  reload after first visit and no waiting worker after update.
-- Static policy retains `connect-src 'self'`, response-header
-  `frame-ancestors 'none'`, immutable asset caching, ZIP MIME type, and the
-  new real 404 override.
+Lighthouse 12.8.2 mobile against the production build scored **100 performance,
+100 accessibility, 100 best practices, and 100 SEO**. FCP was 0.9 s, LCP 0.9 s,
+TBT 0 ms, CLS 0, and Speed Index 0.9 s.
 
-## Deployment and live evidence
+- Landing JavaScript: 316 B entry + 711 B shared chunk (1,027 B total).
+- Landing CSS: 13,773 B main + 116 B touch rules (13,889 B total).
+- Mobile hero WebP: 92,948 B.
+- Social card: 123,752 B; 1200×630; metadata-only, not loaded on first paint.
+- Apple touch icon: 14,680 B; 180×180.
+- Unpacked MV3 extension: 33,600 B.
 
-- Pushed repair commits `4f4034c` and `fc42d4c` to `origin/main`.
-- Deployed the final static artifact to existing Static Web App
-  `sf-pronunciation-cue-reader` in `eastus2`: deployment
-  `4a348a39-a082-4e45-8d3f-7a069ef8ec73`. The default host is
-  `thankful-mushroom-02ba0b00f.7.azurestaticapps.net`; the live custom domain
-  is <https://pronunciation-cue-reader.sociobot.in/>.
-- Live `/`, `/demo/`, `/privacy/`, and `/terms/` all passed
-  `verify-url.sh`: HTTP 200, title/lang/one-h1/main/alt checks, and zero
-  console/page errors. A real unknown live path now returns **HTTP 404** and
-  renders `Page not found — Say It Right` with `That page is not here.`
-- Live desktop and 390px checks found zero overflow, no errors, a first-tab
-  skip link, same-origin-only requests, and zero serious/critical axe findings
-  on home plus demo in light and dark themes. A fresh live service-worker
-  profile was controller-owned after reload; `registration.update()` had no
-  waiting worker and an offline reload rendered the home h1 with no errors.
-- The deployed HTML matches the final build byte-for-byte: home SHA-256
-  `38cb380da6984ec7b0afab8bd00dd6ef623eccb4c2d55125fde4753d02f752a0`;
-  demo SHA-256
-  `d0c2b5a48990e847865efcf367d7a0d54eb46faeebd4ed52aeb909bea94d6541`.
-  The live hashed JavaScript sends `public, max-age=31536000, immutable`.
-  Headers include the expected CSP (`connect-src 'self'`,
-  `frame-ancestors 'none'`), Permissions-Policy, strict referrer policy,
-  HSTS, and `nosniff`.
+These remain below the static product budgets. There are no third-party fonts,
+scripts, analytics, trackers, or runtime AI/payment calls.
 
-## Known gap
+## Deployment and live verification
 
-No product gaps are known. Lighthouse was attempted locally; worker Chrome
-crashed during Lighthouse's full-page screenshot artifact after collecting a
-971 ms LCP and 0 CLS. The page itself had no console or axe failure, and all
-size, Playwright, URL-verifier, and live-browser checks above passed.
+- Pushed `e958d20` to `origin/main`.
+- Uploaded `dist/site` to the existing Azure Static Web App
+  `sf-pronunciation-cue-reader` in `eastus2` with deployment ID
+  `fc8a2d8c-ec9c-46ee-a946-28e11feff650`.
+- Default host:
+  `thankful-mushroom-02ba0b00f.7.azurestaticapps.net`. The existing custom
+  domain was reused; no DNS or other infrastructure was changed.
+- Live home, demo, privacy, terms, and explicit 404 documents passed
+  `verify-url.sh` with zero console/page errors. A missing live URL returns HTTP
+  404 and renders `That page is not here.`
+- Live home SHA-256 is
+  `54189ea3c9c8d732b3483d8d36d4a4b5652f00613383dfdaf74a8c3002fad828` on
+  the local build, custom domain, and Azure default host. Live demo SHA-256 is
+  `0b6a526ae312c5aa7cba2095ac20d0f9fcfb804d9216666ad5411a15399cebfd`,
+  matching the local build.
+- Every extracted file in the live extension ZIP matches `dist/extension`.
+  The live social card and touch icon also match the local SHA-256 values and
+  report 1200×630 and 180×180 respectively.
+- Live desktop and 390px home/demo checks in light and dark modes found zero
+  serious/critical axe findings, zero console/page errors, zero horizontal
+  overflow, first-tab skip-link focus, and only same-origin requests. The live
+  demo add/reset flow passed.
+- A fresh live service-worker profile was controlled after reload;
+  `registration.update()` left no waiting worker; an offline reload rendered
+  the correct `h1` with zero page errors.
+- Response policy includes `connect-src 'self'`, response-header
+  `frame-ancestors 'none'`, HSTS, strict referrer policy, `nosniff`, restrictive
+  Permissions-Policy, and immutable caching for hashed assets.
+
+This is a static extension download and landing site with no product server,
+sign-in, tenant, or paid checkout, so application rate-limit and Entra identity
+tests do not apply. Live identity was instead verified by matching both serving
+hosts and the downloadable extension to the local release artifact.
+
+## Known gaps and next steps
+
+No release-blocking gaps are known. Factory deployment may proceed from the
+current `main`; independent verification should rerun the 16 claim commands and
+the metadata/live identity checks above.
