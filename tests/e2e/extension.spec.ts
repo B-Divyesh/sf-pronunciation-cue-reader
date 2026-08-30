@@ -186,6 +186,105 @@ test('@claim:backup-export exports a user-requested JSON backup without a networ
   }
 });
 
+test('@claim:portable-backup-import imports a portable JSON backup into extension-local storage', async ({}, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop', 'The extension package only needs one Chromium import test.');
+  const extensionPath = resolve('dist/extension');
+  const context = await chromium.launchPersistentContext('', {
+    channel: 'chromium',
+    headless: true,
+    args: [`--disable-extensions-except=${extensionPath}`, `--load-extension=${extensionPath}`]
+  });
+  try {
+    let worker = context.serviceWorkers()[0];
+    if (!worker) worker = await context.waitForEvent('serviceworker');
+    await worker.evaluate(async () => {
+      await chrome.storage.local.set({
+        pendingSelection: {
+          text: 'Read PostgreSQL with a saved cue.',
+          url: 'https://docs.example.org/guide',
+          capturedAt: Date.now()
+        }
+      });
+    });
+    const extensionId = new URL(worker.url()).host;
+    const page = await context.newPage();
+    const requests: string[] = [];
+    page.on('request', (request) => requests.push(request.url()));
+    await page.goto(`chrome-extension://${extensionId}/popup.html`);
+    await page.locator('.tools summary').click();
+    await page.locator('#import-file').setInputFiles({
+      name: 'portable-cues.json',
+      mimeType: 'application/json',
+      buffer: Buffer.from(JSON.stringify([{
+        id: 'docs.example.org:PostgreSQL',
+        term: 'PostgreSQL',
+        sayAs: 'post-gress cue ell',
+        site: 'https://docs.example.org/guide',
+        scope: 'site',
+        createdAt: 1,
+        updatedAt: 1
+      }]))
+    });
+    await expect(page.locator('#toast')).toHaveText('1 cue imported.');
+    await expect(page.locator('#cue-list')).toContainText('PostgreSQL');
+    await expect.poll(() => worker.evaluate(async () => (await chrome.storage.local.get('cues')).cues)).toEqual([
+      expect.objectContaining({
+        id: 'docs.example.org:PostgreSQL',
+        term: 'PostgreSQL',
+        sayAs: 'post-gress cue ell',
+        site: 'docs.example.org',
+        scope: 'site'
+      })
+    ]);
+    expect(requests.every((url) => url.startsWith(`chrome-extension://${extensionId}/`))).toBe(true);
+  } finally {
+    await context.close();
+  }
+});
+
+test('@claim:active-tab-boundary has no broad page access before an explicit reader action', async ({}, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop', 'The extension package only needs one Chromium permission-boundary test.');
+  const manifest = JSON.parse(readFileSync('dist/extension/manifest.json', 'utf8')) as {
+    content_scripts?: unknown;
+    host_permissions?: string[];
+    optional_host_permissions?: string[];
+    permissions?: string[];
+  };
+  expect(manifest.host_permissions ?? []).toEqual([]);
+  expect(manifest.optional_host_permissions ?? []).toEqual([]);
+  expect(manifest.content_scripts).toBeUndefined();
+  expect(manifest.permissions).toEqual(expect.arrayContaining(['activeTab', 'storage', 'contextMenus', 'scripting']));
+
+  const extensionPath = resolve('dist/extension');
+  const context = await chromium.launchPersistentContext('', {
+    channel: 'chromium',
+    headless: true,
+    args: [`--disable-extensions-except=${extensionPath}`, `--load-extension=${extensionPath}`]
+  });
+  try {
+    let worker = context.serviceWorkers()[0];
+    if (!worker) worker = await context.waitForEvent('serviceworker');
+    const page = await context.newPage();
+    await page.goto('http://127.0.0.1:4173/');
+    const storedBeforeAction = await worker.evaluate(async () => chrome.storage.local.get(['pendingSelection', 'cues']));
+    expect(storedBeforeAction).toEqual({});
+    const injectionResult = await worker.evaluate(async () => {
+      const [tab] = await chrome.tabs.query({ active: true, lastFocusedWindow: true });
+      if (!tab?.id) return { allowed: false, message: 'No active tab was available for the permission check.' };
+      try {
+        await chrome.scripting.executeScript({ target: { tabId: tab.id }, func: () => document.body.textContent });
+        return { allowed: true, message: '' };
+      } catch (error) {
+        return { allowed: false, message: error instanceof Error ? error.message : String(error) };
+      }
+    });
+    expect(injectionResult.allowed).toBe(false);
+    expect(injectionResult.message).toMatch(/permission|access|host/i);
+  } finally {
+    await context.close();
+  }
+});
+
 test('opened Backup panel remains accessible with 44px navigation targets in dark mode', async ({}, testInfo) => {
   test.skip(testInfo.project.name !== 'desktop', 'The extension package only needs one Chromium smoke test.');
   const extensionPath = resolve('dist/extension');

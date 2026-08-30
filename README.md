@@ -63,8 +63,9 @@ deployable directory always contains the ZIP linked by the landing page.
 4. Open a normal web page, select some text, and click the Say It Right icon.
 
 The extension deliberately asks for `activeTab`, storage, context-menu, and
-scripting permissions only. It has no broad host permission and cannot read a
-page until the user invokes it.
+scripting permissions only. It has no broad host permission. Chrome keeps
+page access off until you open the reader or choose the selected-text context
+menu.
 
 ## Project map
 

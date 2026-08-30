@@ -42,6 +42,13 @@
     "sandbox": "fresh Chromium extension profile; save a cue, trigger Export, parse the downloaded JSON, and record extension-local requests only"
   },
   {
+    "id": "portable-backup-import",
+    "claim": "Imports a portable JSON backup into the private per-site glossary.",
+    "where": "extension Backup panel, README",
+    "test": "npm run test:e2e -- --grep @claim:portable-backup-import",
+    "sandbox": "fresh Chromium extension profile; upload a portable JSON backup and assert the imported cue is rendered and stored only in chrome.storage.local"
+  },
+  {
     "id": "keyboard-reader",
     "claim": "Lets readers use the cue flow with a keyboard and visible focus.",
     "where": "landing page, README",
@@ -96,6 +103,13 @@
     "where": "README",
     "test": "npm run test:e2e -- --grep @claim:extension-entry-points",
     "sandbox": "fresh packaged extension; assert the toolbar popup and shortcut manifest entries, the registered selection-menu entry, and the context-menu handoff that opens the cue form"
+  },
+  {
+    "id": "active-tab-boundary",
+    "claim": "Uses no broad host permission and cannot access page content before an explicit reader action.",
+    "where": "README",
+    "test": "npm run test:e2e -- --grep @claim:active-tab-boundary",
+    "sandbox": "fresh packaged extension on a normal page; assert no host permissions or content scripts, no captured page data before action, and that attempted scripting is denied without an activeTab grant"
   },
   {
     "id": "per-site-local-glossary",
