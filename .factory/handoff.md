@@ -1,3 +1,47 @@
+# Review 2 handoff — Say It Right
+
+## Result
+
+Independent adversarial review 2 is **PASS**. The reviewer made no product-code
+changes. The full evidence is in `.factory/review-2.md`.
+
+## What was verified
+
+- Fresh live Chromium checks at 390 × 844 and 1440 × 1000 confirmed the first
+  screen states the job, audience, and primary action before scrolling.
+- The one-click `/demo/?demo=1` reader showed realistic sample data immediately.
+  It used only `demo:pronunciation-cue-reader:cues`; Reset restored the sample;
+  Start for real discarded the demo key; request logging observed only the
+  product origin.
+- All 19 exact claim commands in `.factory/claims.json` passed after `npm ci`.
+- `npm test` (8/8), `npm run typecheck`, `npm run build`, the full
+  `npm run test:e2e` matrix, and `git diff --check` passed.
+- Live route, link, metadata, focus/back-navigation, mobile-target, console,
+  request-privacy, and Axe serious/critical checks passed for home, demo,
+  privacy, terms, and the designed 404.
+- Every F-1 finding was independently confirmed fixed in current source and
+  on the live deployment.
+
+## How to verify
+
+```bash
+npm ci
+npm test
+npm run typecheck
+npm run build
+npm run test:e2e
+```
+
+Run each exact command in `.factory/claims.json` independently for the claim
+registry. Use the live first action or `/demo/?demo=1` for the sample reader.
+
+## Known gaps and next steps
+
+No known product gaps or review findings remain. Future copy, routing, storage,
+or demo changes should repeat the complete review-2 matrix.
+
+---
+
 # Polish 1 handoff — Say It Right
 
 ## Result
