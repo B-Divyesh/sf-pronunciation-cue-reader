@@ -12,7 +12,7 @@
 }
 
 .demo-banner p { margin: 0; }
-.demo-banner .text-button { min-height: 44px; margin-left: 14px; padding: 8px 0; border: 0; background: transparent; color: var(--lime); font: 800 14px var(--display); text-decoration: underline; cursor: pointer; }
+.demo-banner .text-button { min-height: 44px; margin-left: 14px; padding: 8px; display: inline-flex; align-items: center; border: 0; background: transparent; color: var(--lime); font: 800 14px var(--display); text-decoration: underline; cursor: pointer; }
 .demo-page { max-width: 1160px; margin: 0 auto; padding: 74px 32px 120px; }
 .demo-intro { max-width: 780px; margin-bottom: 58px; }
 .demo-intro h1 { max-width: 700px; }

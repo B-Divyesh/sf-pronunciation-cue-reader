@@ -8,3 +8,15 @@
   align-items: center;
   min-height: 44px;
 }
+
+.site-header nav a,
+.site-footer nav a,
+.legal a[href^="mailto:"] {
+  padding-inline: 8px;
+}
+
+.legal a[href^="mailto:"] {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}

@@ -16,12 +16,13 @@ for (const colorScheme of ['light', 'dark'] as const) {
     await expect(page.locator('#how-title')).toBeVisible();
     await expect(page.locator('.steps h3')).toHaveCount(3);
     await expect(page.locator('.line-icon').first()).toHaveText('Aa');
-    await expect(page.getByRole('link', { name: 'Try it with sample data' })).toHaveAttribute('href', '/demo/');
+    await expect(page.getByRole('link', { name: 'Try it with sample data' })).toHaveAttribute('href', '/demo/?demo=1');
     await expect(page.getByRole('link', { name: 'Download for Chrome' })).toHaveAttribute('href', '/downloads/say-it-right.zip');
     const results = await new AxeBuilder({ page }).analyze();
     expect(results.violations.filter((violation) => ['serious', 'critical'].includes(violation.impact ?? ''))).toEqual([]);
     expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBe(0);
-    await page.keyboard.press('Tab');
+    await expect(page.getByRole('heading', { level: 1 })).toBeFocused();
+    await page.locator('.skip-link').focus();
     await expect(page.locator(':focus')).toHaveAttribute('href', '#main');
     expect(consoleErrors).toEqual([]);
   });
@@ -48,7 +49,7 @@ test('@claim:demo-sandbox the one-click sample reader is isolated, resettable, a
 
   await page.getByLabel('Word or phrase').fill('OpenTelemetry');
   await page.getByLabel('Say it like').fill('open tel eh metry');
-  await page.getByRole('button', { name: 'Save sample cue' }).click();
+  await page.getByRole('button', { name: 'Save sample pronunciation cue' }).click();
   await expect(page.locator('#demo-cue-list')).toContainText('OpenTelemetry');
   await page.getByRole('button', { name: 'Reset demo' }).click();
   await expect(page.locator('#demo-cue-list')).not.toContainText('OpenTelemetry');
@@ -66,9 +67,16 @@ test('@claim:no-account-demo opens the working sample reader without an account'
   await page.goto('/');
   await expect(page.locator('input[type="email"], input[type="password"]')).toHaveCount(0);
   await page.getByRole('link', { name: 'Try it with sample data' }).click();
-  await expect(page).toHaveURL(/\/demo\/$/);
+  await expect(page).toHaveURL(/\/demo\/\?demo=1$/);
   await expect(page.locator('#demo-passage')).toContainText('Kubernetes');
   await expect(page.locator('input[type="email"], input[type="password"]')).toHaveCount(0);
+});
+
+test('the explicit demo query enters the isolated sample reader', async ({ page }) => {
+  await page.goto('/?demo=1');
+  await expect(page).toHaveURL(/\/demo\/\?demo=1$/);
+  await expect(page.getByText('Demo — sample data, nothing is saved to your real reader.')).toBeVisible();
+  expect(await page.evaluate(() => Object.keys(localStorage))).toEqual(['demo:pronunciation-cue-reader:cues']);
 });
 
 test('@claim:source-preserving demo keeps displayed selected text separate from its spoken cue output', async ({ page }) => {
@@ -90,6 +98,40 @@ test('legal pages are present and linked', async ({ page }) => {
   await expect(page.getByRole('heading', { level: 1, name: 'Privacy' })).toBeVisible();
   await page.goto('/terms/');
   await expect(page.getByRole('heading', { level: 1, name: 'Terms of use' })).toBeVisible();
+});
+
+test('document routes focus and announce their destination heading, including browser back', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByRole('heading', { level: 1 })).toBeFocused();
+  await page.getByRole('link', { name: 'Demo', exact: true }).click();
+  await expect(page).toHaveURL(/\/demo\/\?demo=1$/);
+  await expect(page.getByRole('heading', { level: 1 })).toBeFocused();
+  await expect(page.locator('.route-announcement')).toContainText('Try pronunciation cues with sample text.');
+  await page.goBack();
+  await expect(page).toHaveURL(/\/$/);
+  await expect(page.getByRole('heading', { level: 1 })).toBeFocused();
+  await expect(page.locator('.route-announcement')).toContainText('Read selected text with pronunciation cues.');
+});
+
+test('public routes share the required header, footer, and sitemap entries', async ({ page }) => {
+  const routes = ['/', '/demo/', '/privacy/', '/terms/', '/404.html'];
+  for (const route of routes) {
+    await page.goto(route);
+    await expect(page.locator('.site-header .logo')).toBeVisible();
+    await expect(page.locator('.site-header nav')).toContainText('Demo');
+    await expect(page.locator('.site-header nav')).toContainText('How it works');
+    await expect(page.locator('.site-header nav')).toContainText('Privacy');
+    await expect(page.locator('.site-footer')).toContainText('A private pronunciation cue reader.');
+    await expect(page.locator('.site-footer')).toContainText('Built by Param Factory.');
+    await expect(page.locator('.site-footer')).toContainText('Version 1.0.0.');
+    await expect(page.locator('.site-footer')).toContainText('Privacy');
+    await expect(page.locator('.site-footer')).toContainText('Terms');
+  }
+  const sitemap = await (await page.request.get('/sitemap.xml')).text();
+  for (const route of ['/', '/demo/', '/privacy/', '/terms/']) {
+    const url = `https://pronunciation-cue-reader.sociobot.in${route}`;
+    expect(sitemap.split(`<loc>${url}</loc>`)).toHaveLength(2);
+  }
 });
 
 test('every public route has canonical, social-card, and Apple-touch metadata', async ({ page }) => {
@@ -174,25 +216,27 @@ test('ships a real extension archive plus deploy policy and offline shell', asyn
   expect(worker).not.toContain('__PRECACHE__');
   expect(worker).not.toContain('__CACHE_NAME__');
   expect(worker).toMatch(/\/assets\/site-[\w-]+\.js/);
-  expect(worker).toMatch(/\/assets\/site-[\w-]+\.css/);
+  expect(worker).toMatch(/\/assets\/[\w-]+\.css/);
 });
 
-test('keeps visible mobile navigation and footer targets at least 44px', async ({ page }, testInfo) => {
+test('keeps every visible mobile route control at least 44px', async ({ page }, testInfo) => {
   test.skip(testInfo.project.name !== 'mobile-390', 'Target-size regression is exercised at the requested mobile viewport.');
-  await page.goto('/');
-  for (const locator of [page.locator('.site-header .logo'), page.locator('.site-header .nav-download')]) {
-    await expect(locator).toBeVisible();
-    expect((await locator.boundingBox())?.height).toBeGreaterThanOrEqual(44);
-  }
-  await page.locator('footer').scrollIntoViewIfNeeded();
-  for (const locator of [
-    page.locator('.site-footer .logo'),
-    page.getByRole('link', { name: 'Privacy' }).last(),
-    page.getByRole('link', { name: 'Terms' }).last(),
-    page.getByRole('link', { name: 'Source' }),
-  ]) {
-    await expect(locator).toBeVisible();
-    expect((await locator.boundingBox())?.height).toBeGreaterThanOrEqual(44);
+  for (const route of ['/', '/demo/?demo=1', '/privacy/', '/terms/', '/404.html']) {
+    await page.goto(route);
+    await page.evaluate(() => window.scrollTo(0, 0));
+    const tooSmall = await page.locator('a, button, input, select').evaluateAll((elements) => elements
+      .filter((element) => {
+        const style = getComputedStyle(element);
+        const rect = element.getBoundingClientRect();
+        return style.display !== 'none' && style.visibility !== 'hidden' && rect.width > 0 && rect.height > 0;
+      })
+      .map((element) => {
+        const rect = element.getBoundingClientRect();
+        return { label: (element.textContent || element.getAttribute('aria-label') || element.id).trim(), width: rect.width, height: rect.height };
+      })
+      .filter(({ width, height }) => width < 44 || height < 44));
+    expect(tooSmall, `${route} has undersized controls`).toEqual([]);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBe(0);
   }
 });
 

@@ -2,6 +2,7 @@ import { activeCues, createChunks, cueId, normalizeSite, validateCue } from '../
 import type { Cue } from '../../src/lib/types';
 import './touch-targets.css';
 import './demo.css';
+import { focusRouteHeading } from './route-focus';
 
 const DEMO_CUES_KEY = 'demo:pronunciation-cue-reader:cues';
 const DEMO_SITE = 'docs.example.org';
@@ -56,7 +57,7 @@ function readSample(): void {
   const spoken = createChunks(SAMPLE_TEXT, activeCues(cues, DEMO_SITE)).map((chunk) => chunk.spoken).join(' ');
   speechSynthesis.cancel();
   speechSynthesis.speak(new SpeechSynthesisUtterance(spoken));
-  $('demo-reader-status').textContent = 'Reading the sample with its saved cues.';
+  $('demo-reader-status').textContent = 'Reading the sample with its saved pronunciation cues.';
 }
 
 function resetDemo(): void {
@@ -64,12 +65,13 @@ function resetDemo(): void {
   cues = initialCues();
   persistDemo();
   renderDemo();
-  $('demo-reader-status').textContent = 'Demo reset. The original sample cues are ready.';
+  $('demo-reader-status').textContent = 'Demo reset. The original sample pronunciation cues are ready.';
 }
 
 cues = loadDemo();
 persistDemo();
 renderDemo();
+focusRouteHeading();
 
 $<HTMLButtonElement>('read-sample').addEventListener('click', readSample);
 $<HTMLButtonElement>('reset-demo').addEventListener('click', resetDemo);
@@ -92,5 +94,5 @@ $<HTMLFormElement>('demo-cue-form').addEventListener('submit', (event) => {
   $<HTMLInputElement>('demo-term').value = '';
   $<HTMLInputElement>('demo-say-as').value = '';
   $('demo-error').textContent = '';
-  $('demo-reader-status').textContent = `Saved the sample cue for ${term}.`;
+  $('demo-reader-status').textContent = `Saved the sample pronunciation cue for ${term}.`;
 });

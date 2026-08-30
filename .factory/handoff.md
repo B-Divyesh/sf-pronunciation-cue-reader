@@ -1,38 +1,52 @@
-# Review 1 handoff — Say It Right
+# Polish 1 handoff — Say It Right
 
 ## Result
 
-**FAIL.** This was a read-only adversarial review; no product code was changed.
-The committed report is `.factory/review-1.md`.
+All ten findings in `.factory/review-1.md` are repaired. The static landing
+site keeps its documented pronunciation-field visual identity; the MV3
+extension artifact and static-site deployment class are unchanged.
 
-## What was checked
+## What changed
 
-- Fresh live desktop and 390 px cold reads, demo behavior, storage isolation,
-  reset/start-real behavior, request logs, responsive overflow, metadata,
-  404, links, download archive, route/back focus, target sizes, axe checks,
-  sitemap, headers, and visual identity.
-- All 18 exact commands from `.factory/claims.json` after `npm ci`.
-- `npm test` (8/8), `npm run build`, full `npm run test:e2e` (54 tests with
-  declared skips), `npm run typecheck`, `npm run lint`, and `git diff --check`.
-- Every earlier verification finding and the existing handoff. No previous
-  `review-*` or `polish-*` files exist.
+- Added focused, announced document-route changes and a direct `/?demo=1`
+  entry that redirects into the isolated `/demo/?demo=1` reader.
+- Added a registered and observable phrase/abbreviation matching claim.
+- Made every visible mobile route control at least 44 px, added a route target
+  matrix, and standardized the header/footer on home, demo, legal, and 404.
+- Added the demo route to the sitemap; completed plain-language and terminology
+  rewrites in the landing page, demo, legal pages, README, catalog description,
+  and copy audit.
+- Tightened the desktop hero headline scale after visual inspection so it no
+  longer overlaps the hero illustration.
 
-## Open work
+## Verification
 
-See F-1-1 through F-1-10 in `.factory/review-1.md`. Blocking work is route
-focus/announcement, a registered phrase-matching claim test, and 44 px mobile
-targets on demo, legal, and 404 routes.
+Clean dependency install: `npm ci` completed with 0 vulnerabilities.
 
-## Reproduce
+- `npm test` — 8 passing.
+- `npm run typecheck` and `npm run lint` — passing.
+- `npm run build` — passing; produces `dist/site` and `dist/extension`.
+- `npm run test:e2e` — 62 browser tests passing (declared project skips only),
+  including axe serious/critical checks, offline shell reload, route metadata,
+  focus/announcement/back navigation, demo isolation, privacy request checks,
+  and the 390 px target matrix.
+- Every exact command listed in `.factory/claims.json` was run independently
+  from the clean install; all passed. `test-results/.last-run.json` records
+  `{"status":"passed","failedTests":[]}`.
+- `git diff --check` passed.
+- Local visual checks: `test-results/polish-1-home-desktop.png` and
+  `test-results/polish-1-demo-390.png`.
 
-```bash
-npm ci
-npm test
-npm run build
-npm run test:e2e
-npm run typecheck
-npm run lint
-```
+`verify-url.sh` is not present in this repository. The equivalent title/lang/
+main/alt/console coverage is in the Playwright route matrix, and the existing
+Playwright axe integration found no serious or critical violations.
 
-Then run each `test` command in `.factory/claims.json` individually and repeat
-the live mobile route checks documented in the review.
+## Deploy and live recheck
+
+Pending the release push at the time this file was written. After deployment,
+open `https://pronunciation-cue-reader.sociobot.in` cold and update this
+section with the commit and live result.
+
+## Known gaps
+
+None.

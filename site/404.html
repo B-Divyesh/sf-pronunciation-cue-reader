@@ -24,12 +24,14 @@
     <link rel="icon" href="/icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="stylesheet" href="/src/site.css" />
+    <link rel="stylesheet" href="/src/route-polish.css" />
     <link rel="stylesheet" href="/src/demo.css" />
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to main content</a>
-    <header class="site-header"><a class="logo" href="/" aria-label="Say It Right home"><span class="logo-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>Say It Right</span></a><nav aria-label="Main navigation"><a href="/demo/">Try the demo</a><a href="/">Home</a></nav></header>
-    <main id="main" class="not-found"><p class="kicker">404</p><h1>That page is not here.</h1><p class="hero-lede">Return home to try pronunciation cues with sample text or download the extension.</p><div class="hero-actions"><a class="button primary" href="/demo/">Try the demo</a><a class="button quiet" href="/">Go home</a></div></main>
-    <footer class="site-footer"><p>Say It Right · local-first pronunciation cues · Version 1.0.0.</p><nav aria-label="Legal"><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a></nav></footer>
+    <header class="site-header"><a class="logo" href="/" aria-label="Say It Right home"><span class="logo-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>Say It Right</span></a><nav aria-label="Main navigation"><a href="/demo/?demo=1">Demo</a><a href="/#how">How it works</a><a href="/privacy/">Privacy</a></nav></header>
+    <main id="main" class="not-found"><p class="kicker">404</p><h1>That page is not here.</h1><p class="hero-lede">Return home to try pronunciation cues with sample text or download the extension.</p><div class="hero-actions"><a class="button primary" href="/demo/?demo=1">Try the demo</a><a class="button quiet" href="/">Go home</a></div></main>
+    <footer class="site-footer"><a class="logo" href="/"><span class="logo-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>Say It Right</span></a><p>A private pronunciation cue reader. Built by Param Factory. Version 1.0.0.</p><nav aria-label="Legal"><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a><a href="https://github.com/B-Divyesh/sf-pronunciation-cue-reader">Source</a></nav></footer>
+    <script type="module" src="/src/site.ts"></script>
   </body>
 </html>

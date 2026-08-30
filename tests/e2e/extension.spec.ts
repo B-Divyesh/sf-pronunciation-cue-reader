@@ -242,6 +242,41 @@ test('@claim:portable-backup-import imports a portable JSON backup into extensio
   }
 });
 
+test('@claim:whole-words-and-phrases matches full phrases and abbreviations without changing partial words', async ({}, testInfo) => {
+  test.skip(testInfo.project.name !== 'desktop', 'The extension package only needs one Chromium matching test.');
+  const extensionPath = resolve('dist/extension');
+  const context = await chromium.launchPersistentContext('', {
+    channel: 'chromium',
+    headless: true,
+    args: [`--disable-extensions-except=${extensionPath}`, `--load-extension=${extensionPath}`]
+  });
+  try {
+    let worker = context.serviceWorkers()[0];
+    if (!worker) worker = await context.waitForEvent('serviceworker');
+    await worker.evaluate(async () => {
+      await chrome.storage.local.set({
+        cues: [
+          { id: 'docs.example.org:kubernetes team', term: 'Kubernetes team', sayAs: 'koo-ber-net-ees team', site: 'docs.example.org', scope: 'site', createdAt: 1, updatedAt: 1 },
+          { id: 'docs.example.org:nasa', term: 'NASA', sayAs: 'N A S A', site: 'docs.example.org', scope: 'site', createdAt: 2, updatedAt: 2 },
+          { id: 'docs.example.org:nas', term: 'NAS', sayAs: 'network storage', site: 'docs.example.org', scope: 'site', createdAt: 3, updatedAt: 3 }
+        ],
+        pendingSelection: {
+          text: 'The Kubernetes team consulted NASA, not NASAware.',
+          url: 'https://docs.example.org/guide',
+          capturedAt: Date.now()
+        }
+      });
+    });
+    const extensionId = new URL(worker.url()).host;
+    const page = await context.newPage();
+    await page.goto(`chrome-extension://${extensionId}/popup.html`);
+    await expect(page.locator('.chunk')).toHaveAttribute('title', 'Will be spoken as: The koo-ber-net-ees team consulted N A S A, not NASAware.');
+    await expect(page.locator('.chunk')).toContainText('The Kubernetes team consulted NASA, not NASAware.');
+  } finally {
+    await context.close();
+  }
+});
+
 test('@claim:active-tab-boundary has no broad page access before an explicit reader action', async ({}, testInfo) => {
   test.skip(testInfo.project.name !== 'desktop', 'The extension package only needs one Chromium permission-boundary test.');
   const manifest = JSON.parse(readFileSync('dist/extension/manifest.json', 'utf8')) as {

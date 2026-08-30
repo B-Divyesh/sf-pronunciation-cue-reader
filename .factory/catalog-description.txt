@@ -1,0 +1,1 @@
+Read selected text aloud with private pronunciation cues.

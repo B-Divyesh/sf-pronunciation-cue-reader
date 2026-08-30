@@ -7,6 +7,13 @@
     "sandbox": "fresh browser page opens /demo/, saves a sample cue, resets it, and asserts only the demo: localStorage namespace was used and Start for real discards it"
   },
   {
+    "id": "whole-words-and-phrases",
+    "claim": "Matches whole words or phrases, including abbreviations and product names.",
+    "where": "landing page, extension reader",
+    "test": "npm run test:e2e -- --grep @claim:whole-words-and-phrases",
+    "sandbox": "fresh Chromium extension profile; seed a phrase, an abbreviation, and a partial-word cue, then assert full matches change only spoken output while the partial word stays unchanged"
+  },
+  {
     "id": "site-cue-limit",
     "claim": "Stores up to 20 site-scoped cues.",
     "where": "landing page, terms, README",

@@ -1,30 +1,29 @@
 # Say It Right
 
-Say It Right is a local-first Chrome/Chromium extension for dyslexic,
-low-vision, and language-learning readers who need names, abbreviations, and
-technical terms pronounced consistently. Select a short passage, open the
-extension, and listen while spoken chunks are highlighted. If a voice gets a
-term wrong, save a site-specific phonetic spelling or replacement and preview
-it in any voice installed in the browser.
+Say It Right is a Chrome/Chromium extension for dyslexic, low-vision, and
+language-learning readers. It helps names, abbreviations, and technical terms
+sound consistent. Select text, open the extension, and listen while spoken
+chunks are highlighted. Save a pronunciation cue when a voice gets a term
+wrong. Preview it in a browser voice.
 
-The extension does not send selected text or cues to a server.
+The extension does not send selected text or pronunciation cues to a server.
 
-Try the isolated sample reader at [/demo/](/demo/). Its Kubernetes,
-PostgreSQL, and NASA sample uses only the `demo:` browser-storage namespace.
-Use **Reset demo** to restore it or **Start for real** to discard it before
-installing the extension.
+Try the isolated sample reader at [/demo/?demo=1](/demo/?demo=1). Its
+Kubernetes, PostgreSQL, and NASA sample uses only the `demo:` browser-storage
+namespace. Use **Reset demo** to restore it or **Start for real** to discard it
+before installing the extension.
 
 ## Features
 
 - Reads selected text with visible chunk progress; reading can pause, resume,
   or stop.
-- Stores a private per-site pronunciation glossary in extension-local storage.
-- Adds, previews, edits, and deletes cues; warns that IPA realization is
+- Stores private pronunciation cues per site in extension-local storage.
+- Adds, previews, edits, and deletes pronunciation cues; warns that IPA realization is
   voice-engine dependent.
 - Works from the toolbar, `Alt+Shift+S`, or the selection context menu.
 - Exports a JSON backup when you request it and imports portable backups.
-- Includes 20 site cues per website. Every cue stays scoped to the site where
-  you saved it.
+- Includes 20 pronunciation cues per site. Every pronunciation cue stays on
+  the site where you saved it.
 - Supports keyboard use, 200% text zoom, and reduced motion.
 
 ## Develop
@@ -60,7 +59,7 @@ deployable directory always contains the ZIP linked by the landing page.
 1. Run `npm run build`.
 2. Open `chrome://extensions` and enable Developer mode.
 3. Choose **Load unpacked** and select `dist/extension`.
-4. Open a normal web page, select some text, and click the Say It Right icon.
+4. Open a normal web page, select text, and click the Say It Right icon.
 
 The extension deliberately asks for `activeTab`, storage, context-menu, and
 scripting permissions only. It has no broad host permission. Chrome keeps

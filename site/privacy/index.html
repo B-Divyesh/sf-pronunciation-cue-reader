@@ -24,29 +24,30 @@
     <link rel="icon" href="/icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="stylesheet" href="/src/site.css" />
+    <link rel="stylesheet" href="/src/route-polish.css" />
   </head>
   <body>
     <a class="skip-link" href="#main">Skip to main content</a>
     <header class="site-header">
       <a class="logo" href="/"><span class="logo-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>Say It Right</span></a>
-      <nav aria-label="Main navigation"><a href="/">Home</a><a href="/terms/">Terms</a></nav>
+      <nav aria-label="Main navigation"><a href="/demo/?demo=1">Demo</a><a href="/#how">How it works</a><a href="/privacy/" aria-current="page">Privacy</a></nav>
     </header>
     <main id="main" class="legal">
       <p class="kicker">Plain-language policy · August 30, 2026</p>
       <h1>Privacy</h1>
-      <p class="legal-lede">Your reading material and pronunciation cues stay in your browser.</p>
+      <p class="legal-lede">Your selected text and pronunciation cues stay in your browser.</p>
       <h2>What the extension stores</h2>
-      <p>The extension stores pronunciation cues and their site scope in local extension storage. A context-menu selection is stored for up to ten minutes only to hand it to the popup. It is deleted when used, expired, malformed, or dated in the future.</p>
+      <p>The extension stores pronunciation cues and their site in local extension storage. Selected text from the context menu is kept for up to ten minutes to hand to the popup.</p>
       <h2>What is sent</h2>
       <p>Say It Right does not send selected text or pronunciation cues to us. Reading uses speech voices already installed in or exposed by your browser.</p>
       <h2>Exports and deletion</h2>
-      <p>Glossary export happens only when you request it. The JSON file stays where you save it. Delete individual cues, or remove the extension and its browser data to delete all stored data.</p>
+      <p>Saved-cue export happens only when you request it. The JSON file stays where you save it. Delete individual pronunciation cues, or remove the extension and its browser data to delete all stored data.</p>
       <h2>Website</h2>
       <p>This site has no advertising, tracking pixels, third-party fonts, or behavioral analytics. The host may retain standard security logs.</p>
       <h2>Contact</h2>
       <p>For privacy questions, email <a href="mailto:privacy@sociobot.in">privacy@sociobot.in</a>.</p>
     </main>
-    <footer class="site-footer"><p>Say It Right · local-first pronunciation cues</p><nav aria-label="Legal"><a href="/">Home</a><a href="/terms/">Terms</a></nav></footer>
+    <footer class="site-footer"><a class="logo" href="/"><span class="logo-mark" aria-hidden="true"><i></i><i></i><i></i></span><span>Say It Right</span></a><p>A private pronunciation cue reader. Built by Param Factory. Version 1.0.0.</p><nav aria-label="Legal"><a href="/privacy/">Privacy</a><a href="/terms/">Terms</a><a href="https://github.com/B-Divyesh/sf-pronunciation-cue-reader">Source</a></nav></footer>
     <script type="module" src="/src/site.ts"></script>
   </body>
 </html>
