@@ -1,0 +1,30 @@
+[
+  {
+    "id": "site-cue-limit",
+    "claim": "Stores up to 20 site-scoped cues.",
+    "where": "landing page, terms, README",
+    "test": "npm run test:e2e -- --grep @claim:site-cue-limit",
+    "sandbox": "fresh Chromium extension profile; import 21 site cues and assert exactly 20 are stored"
+  },
+  {
+    "id": "local-reader-data",
+    "claim": "Say It Right does not send selected text or pronunciation cues to us.",
+    "where": "privacy page, README",
+    "test": "npm run test:e2e -- --grep @claim:local-reader-data",
+    "sandbox": "fresh Chromium extension profile; read selected text, save a cue, and assert every request remains extension-local"
+  },
+  {
+    "id": "pending-selection-expiry",
+    "claim": "A context-menu selection is deleted when it is expired.",
+    "where": "privacy page",
+    "test": "npm run test:e2e -- --grep @claim:pending-selection-expiry",
+    "sandbox": "fresh Chromium extension profile; seed an 11-minute pending selection and assert storage no longer contains it after popup load"
+  },
+  {
+    "id": "site-no-trackers",
+    "claim": "This site has no advertising, tracking pixels, third-party fonts, or behavioral analytics.",
+    "where": "privacy page",
+    "test": "npm run test:e2e -- --grep @claim:site-no-trackers",
+    "sandbox": "fresh browser page load; record requests and assert they are all same-origin"
+  }
+]

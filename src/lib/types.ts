@@ -13,10 +13,3 @@ export interface ReaderChunk {
   spoken: string;
   hasCue: boolean;
 }
-
-export interface LicenseCache {
-  token: string;
-  valid: boolean;
-  checkedAt: number;
-  reason?: string;
-}

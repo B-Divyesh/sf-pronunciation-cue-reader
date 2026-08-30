@@ -19,8 +19,8 @@ and does not send selected text or cues to a server.
   voice-engine dependent.
 - Works from the toolbar, `Alt+Shift+S`, or the selection context menu.
 - Imports and exports portable JSON backups without a server.
-- Includes a useful free tier with 20 site cues. A $12 one-time Plus license
-  unlocks unlimited cues and every-site scope through the Sociobot billing API.
+- Includes 20 site cues per website. Every cue stays scoped to the site where
+  you saved it.
 - Supports keyboard use, 200% text zoom, light/dark color schemes, and reduced
   motion.
 
@@ -46,8 +46,7 @@ npm run build
 - `dist/site/downloads/say-it-right.zip` — packaged extension linked by the site
 
 The static deploy root is `dist/site`. No environment variables are required to
-build. The factory registers billing products separately; the client uses the
-slug-based Sociobot checkout and verification endpoints.
+build.
 
 The deployment build command is `npm ci && npm test && npm run build:site`.
 `build:site` deliberately also builds and packages the extension, so the
@@ -67,13 +66,13 @@ page until the user invokes it.
 ## Project map
 
 - `entrypoints/` — WXT background and popup entrypoints
-- `src/lib/` — glossary, chunking, and license logic
+- `src/lib/` — glossary and chunking logic
 - `site/` — landing, privacy, and terms pages
 - `assets/src/` — original generated artwork and provenance
 - `.factory/design.md` — product-specific visual system
 - `.factory/handoff.md` — verification and release handoff
 
-## Privacy and license
+## Privacy
 
 See the published `/privacy/` and `/terms/` pages, or their source under
 `site/`. Code is licensed under the [MIT License](LICENSE). Generated hero art

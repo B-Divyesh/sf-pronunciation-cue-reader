@@ -6,7 +6,7 @@ export type ImportMergeResult = {
   cues: Cue[];
   imported: number;
   skippedForLimit: number;
-  skippedForPlusScope: number;
+  skippedForUnsupportedScope: number;
 };
 
 export function normalizeSite(input: string): string {
@@ -22,7 +22,7 @@ export function normalizeSite(input: string): string {
 export function activeCues(cues: Cue[], site: string): Cue[] {
   const normalized = normalizeSite(site);
   return cues
-    .filter((cue) => cue.scope === 'everywhere' || cue.site === normalized)
+    .filter((cue) => cue.site === normalized)
     .sort((a, b) => b.term.length - a.term.length);
 }
 
@@ -87,19 +87,19 @@ export function parseCueImport(value: string): Cue[] {
   });
 }
 
-/** Merge a portable backup without allowing an import to unlock paid capacity. */
-export function mergeImportedCues(existing: Cue[], imported: Cue[], plus: boolean): ImportMergeResult {
+/** Merge a portable backup while keeping this version's per-site cue boundary. */
+export function mergeImportedCues(existing: Cue[], imported: Cue[]): ImportMergeResult {
   const next = new Map(existing.map((cue) => [cue.id, cue]));
   let importedCount = 0;
   let skippedForLimit = 0;
-  let skippedForPlusScope = 0;
+  let skippedForUnsupportedScope = 0;
 
   for (const cue of imported) {
-    if (!plus && cue.scope === 'everywhere') {
-      skippedForPlusScope += 1;
+    if (cue.scope === 'everywhere') {
+      skippedForUnsupportedScope += 1;
       continue;
     }
-    if (!next.has(cue.id) && !plus && next.size >= FREE_CUE_LIMIT) {
+    if (!next.has(cue.id) && next.size >= FREE_CUE_LIMIT) {
       skippedForLimit += 1;
       continue;
     }
@@ -107,5 +107,5 @@ export function mergeImportedCues(existing: Cue[], imported: Cue[], plus: boolea
     importedCount += 1;
   }
 
-  return { cues: [...next.values()], imported: importedCount, skippedForLimit, skippedForPlusScope };
+  return { cues: [...next.values()], imported: importedCount, skippedForLimit, skippedForUnsupportedScope };
 }

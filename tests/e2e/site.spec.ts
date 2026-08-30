@@ -19,9 +19,28 @@ for (const colorScheme of ['light', 'dark'] as const) {
     await expect(page.getByRole('link', { name: 'Download for Chrome' })).toHaveAttribute('href', '/downloads/say-it-right.zip');
     const results = await new AxeBuilder({ page }).analyze();
     expect(results.violations.filter((violation) => ['serious', 'critical'].includes(violation.impact ?? ''))).toEqual([]);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBe(0);
+    await page.keyboard.press('Tab');
+    await expect(page.locator(':focus')).toHaveAttribute('href', '#main');
     expect(consoleErrors).toEqual([]);
   });
 }
+
+test('site keeps content visible at 200% text size and reduced motion', async ({ page }, testInfo) => {
+  test.skip(testInfo.project.name !== 'mobile-390', 'The text-resize regression is exercised at the requested mobile viewport.');
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  await page.goto('/');
+  await page.evaluate(() => { document.documentElement.style.fontSize = '200%'; });
+  expect(await page.evaluate(() => getComputedStyle(document.documentElement).scrollBehavior)).toBe('auto');
+  expect(await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth)).toBe(0);
+});
+
+test('@claim:site-no-trackers landing requests stay same-origin', async ({ page }) => {
+  const requests: string[] = [];
+  page.on('request', (request) => requests.push(request.url()));
+  await page.goto('/');
+  expect(requests.every((url) => new URL(url).origin === 'http://127.0.0.1:4173')).toBe(true);
+});
 
 test('legal pages are present and linked', async ({ page }) => {
   await page.goto('/privacy/');
@@ -30,11 +49,10 @@ test('legal pages are present and linked', async ({ page }) => {
   await expect(page.getByRole('heading', { level: 1, name: 'Terms of use' })).toBeVisible();
 });
 
-test('checkout return stores and strips a license', async ({ page }) => {
-  await page.goto('/?license=example-test-token');
-  await expect(page).toHaveURL('/');
-  await expect(page.locator('#site-license')).toHaveValue('example-test-token');
-  await expect(page.locator('#license-status')).toContainText('Purchase received');
+test('does not advertise an unprovisioned Plus checkout', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.locator('a[href="https://api.sociobot.in/api/v1/products/pronunciation-cue-reader/checkout"]')).toHaveCount(0);
+  await expect(page.getByText(/Plus/, { exact: false })).toHaveCount(0);
 });
 
 test('ships a real extension archive plus deploy policy and offline shell', async ({ request }) => {
@@ -48,6 +66,8 @@ test('ships a real extension archive plus deploy policy and offline shell', asyn
     mimeTypes: Record<string, string>;
   };
   expect(config.globalHeaders['Content-Security-Policy']).toContain("default-src 'self'");
+  expect(config.globalHeaders['Content-Security-Policy']).toContain("connect-src 'self'");
+  expect(config.globalHeaders['Content-Security-Policy']).not.toContain('api.sociobot.in');
   expect(config.globalHeaders['Permissions-Policy']).toContain('camera=()');
   expect(config.routes.find((route) => route.route === '/assets/*')?.headers['Cache-Control']).toContain('immutable');
   expect(config.mimeTypes['.webmanifest']).toBe('application/manifest+json');
@@ -87,6 +107,11 @@ test('fresh service worker install reloads the app while offline', async ({ page
   await page.evaluate(() => navigator.serviceWorker.ready.then(() => undefined));
   await page.reload();
   await expect.poll(() => page.evaluate(() => Boolean(navigator.serviceWorker.controller))).toBe(true);
+  expect(await page.evaluate(async () => {
+    const registration = await navigator.serviceWorker.ready;
+    await registration.update();
+    return Boolean(registration.waiting);
+  })).toBe(false);
   await context.setOffline(true);
   await page.reload();
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible();

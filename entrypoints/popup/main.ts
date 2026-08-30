@@ -1,12 +1,12 @@
 import './style.css';
 import './touch-targets.css';
 import { activeCues, createChunks, cueId, FREE_CUE_LIMIT, mergeImportedCues, normalizeSite, parseCueImport, validateCue } from '../../src/lib/glossary';
-import { LICENSE_CACHE_KEY, LICENSE_KEY, recentValidLicense, verifyLicense } from '../../src/lib/license';
-import type { Cue, LicenseCache, ReaderChunk } from '../../src/lib/types';
+import type { Cue, ReaderChunk } from '../../src/lib/types';
 
 type PendingSelection = { text: string; url: string; capturedAt: number; openCueForm?: boolean };
+const PENDING_SELECTION_TTL = 10 * 60_000;
 const $ = <T extends HTMLElement>(id: string) => document.getElementById(id) as T;
-const state = { cues: [] as Cue[], site: 'this page', text: '', chunks: [] as ReaderChunk[], chunkIndex: -1, reading: false, paused: false, voices: [] as SpeechSynthesisVoice[], plus: false };
+const state = { cues: [] as Cue[], site: 'this page', text: '', chunks: [] as ReaderChunk[], chunkIndex: -1, reading: false, paused: false, voices: [] as SpeechSynthesisVoice[] };
 
 async function storageGet<T>(key: string): Promise<T | undefined> {
   return (await chrome.storage.local.get(key))[key] as T | undefined;
@@ -14,10 +14,18 @@ async function storageGet<T>(key: string): Promise<T | undefined> {
 
 async function loadPageSelection(): Promise<PendingSelection | null> {
   const pending = await storageGet<PendingSelection>('pendingSelection');
-  if (pending && Date.now() - pending.capturedAt < 10 * 60_000) {
+  const age = pending ? Date.now() - pending.capturedAt : NaN;
+  const isFreshPendingSelection = Boolean(pending && Number.isFinite(age) && age >= 0 && age < PENDING_SELECTION_TTL);
+  if (isFreshPendingSelection && pending) {
     await chrome.storage.local.remove('pendingSelection');
     await chrome.action.setBadgeText({ text: '' });
     return pending;
+  }
+  // Context-menu selections are a short handoff, never durable reading data.
+  // Clear malformed, future-dated, and expired values before querying a tab.
+  if (pending) {
+    await chrome.storage.local.remove('pendingSelection');
+    await chrome.action.setBadgeText({ text: '' });
   }
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -150,7 +158,6 @@ function openCueForm(cue?: Cue): void {
   ($<HTMLInputElement>('cue-id')).value = cue?.id ?? '';
   ($<HTMLInputElement>('term')).value = cue?.term ?? (state.text.split(/\s+/).length <= 5 ? state.text.replace(/[.,!?]+$/, '') : '');
   ($<HTMLInputElement>('say-as')).value = cue?.sayAs ?? '';
-  ($<HTMLInputElement>('global-scope')).checked = cue?.scope === 'everywhere';
   $('cue-error').textContent = '';
   ($<HTMLInputElement>('term')).focus();
 }
@@ -165,39 +172,24 @@ async function saveCue(event: SubmitEvent): Promise<void> {
   const sayAs = ($<HTMLInputElement>('say-as')).value.trim();
   const error = validateCue(term, sayAs);
   if (error) { $('cue-error').textContent = error; return; }
-  const wantsGlobal = ($<HTMLInputElement>('global-scope')).checked;
-  if (wantsGlobal && !state.plus) { $('cue-error').textContent = 'Every-site cues are included with Plus. Site cues stay free.'; return; }
   const editingId = ($<HTMLInputElement>('cue-id')).value;
-  if (!editingId && state.cues.length >= FREE_CUE_LIMIT && !state.plus) {
-    $('cue-error').textContent = `The free glossary holds ${FREE_CUE_LIMIT} cues. Export remains free, or unlock Plus for unlimited cues.`;
+  if (!editingId && state.cues.length >= FREE_CUE_LIMIT) {
+    $('cue-error').textContent = `This site glossary holds ${FREE_CUE_LIMIT} cues. Export a backup, delete a cue, or save the cue on another site.`;
     return;
   }
   const now = Date.now();
   const existing = state.cues.find((cue) => cue.id === editingId);
-  const next: Cue = { id: editingId || cueId(term, wantsGlobal ? '*' : state.site), term, sayAs, site: state.site, scope: wantsGlobal ? 'everywhere' : 'site', createdAt: existing?.createdAt ?? now, updatedAt: now };
+  const next: Cue = { id: editingId || cueId(term, state.site), term, sayAs, site: state.site, scope: 'site', createdAt: existing?.createdAt ?? now, updatedAt: now };
   state.cues = state.cues.filter((cue) => cue.id !== editingId && !(cue.term.toLocaleLowerCase() === term.toLocaleLowerCase() && cue.site === state.site));
   state.cues.push(next); await persistCues(); ($<HTMLFormElement>('cue-form')).hidden = true; renderCues(); renderReader(); showToast('Cue saved on this device.');
 }
 
-async function loadLicense(): Promise<void> {
-  const cache = await storageGet<LicenseCache>(LICENSE_CACHE_KEY);
-  const token = await storageGet<string>(LICENSE_KEY);
-  state.plus = recentValidLicense(cache ?? null) || Boolean(cache?.valid && token);
-  updatePlus(cache);
-  if (token && (!cache || Date.now() - cache.checkedAt >= 86_400_000)) {
-    try { const verdict = await verifyLicense(token); await chrome.storage.local.set({ [LICENSE_CACHE_KEY]: verdict }); state.plus = verdict.valid; updatePlus(verdict); }
-    catch { $('license-status').textContent = state.plus ? 'Plus active. Offline verification will retry later.' : 'Could not verify while offline. The free reader still works.'; }
-  }
-}
-
-function updatePlus(cache?: LicenseCache | null): void {
-  $('license-status').textContent = state.plus ? 'Plus is active on this device.' : cache && !cache.valid ? 'This license is no longer active. You can continue with the free reader.' : '';
-  ($<HTMLInputElement>('global-scope')).disabled = !state.plus;
-}
-
 async function init(): Promise<void> {
-  state.cues = (await storageGet<Cue[]>('cues')) ?? [];
-  await loadLicense();
+  const storedCues = (await storageGet<Cue[]>('cues')) ?? [];
+  const migratedCues = storedCues.map((cue) => cue.scope === 'everywhere' ? { ...cue, scope: 'site' as const } : cue);
+  state.cues = migratedCues;
+  if (migratedCues.some((cue, index) => cue !== storedCues[index])) await persistCues();
+  await chrome.storage.local.remove(['sb_license:pronunciation-cue-reader', 'sb_license:pronunciation-cue-reader:verdict']);
   const selection = await loadPageSelection();
   if (selection) { state.text = selection.text; state.site = normalizeSite(selection.url); }
   $('site-pill').textContent = state.site;
@@ -235,19 +227,18 @@ $<HTMLInputElement>('import-file').addEventListener('change', async (event) => {
   const file = (event.currentTarget as HTMLInputElement).files?.[0];
   if (!file) return;
   try {
-    const result = mergeImportedCues(state.cues, parseCueImport(await file.text()), state.plus);
+    const result = mergeImportedCues(state.cues, parseCueImport(await file.text()));
     state.cues = result.cues;
     await persistCues();
     renderCues();
     renderReader();
     const skipped: string[] = [];
-    if (result.skippedForPlusScope) skipped.push(`${result.skippedForPlusScope} every-site cue${result.skippedForPlusScope === 1 ? '' : 's'} requires Plus`);
+    if (result.skippedForUnsupportedScope) skipped.push(`${result.skippedForUnsupportedScope} every-site cue${result.skippedForUnsupportedScope === 1 ? ' uses' : 's use'} an unsupported every-site scope`);
     if (result.skippedForLimit) skipped.push(`${result.skippedForLimit} cue${result.skippedForLimit === 1 ? '' : 's'} exceed${result.skippedForLimit === 1 ? 's' : ''} the ${FREE_CUE_LIMIT}-cue free limit`);
     showToast(skipped.length ? `${result.imported} imported; ${skipped.join('; ')}.` : `${result.imported} cue${result.imported === 1 ? '' : 's'} imported.`);
   } catch (error) {
     showToast(error instanceof Error ? error.message : 'That backup could not be imported.');
   }
 });
-$('license-button').addEventListener('click', async () => { const token = ($<HTMLInputElement>('license-input')).value.trim(); if (!token) { $('license-status').textContent = 'Paste your license token first.'; return; } $('license-status').textContent = 'Checking license…'; try { const verdict = await verifyLicense(token); await chrome.storage.local.set({ [LICENSE_KEY]: token, [LICENSE_CACHE_KEY]: verdict }); state.plus = verdict.valid; updatePlus(verdict); if (verdict.valid) ($<HTMLInputElement>('license-input')).value = ''; } catch { $('license-status').textContent = 'Could not verify right now. Check your connection and try again.'; } });
 window.addEventListener('unload', () => speechSynthesis.cancel());
 void init();
