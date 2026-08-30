@@ -1,3 +1,42 @@
+# Say It Right — independent verification 6 handoff
+
+## Release status
+
+**FAIL — do not release candidate `e32f3332a92b2716ecc1823363b7841d636a2bd4`
+unchanged.** Verified against <https://pronunciation-cue-reader.sociobot.in/>
+on 2026-08-30 UTC. Functional, privacy, accessibility, offline, build, and
+deployment checks pass, but mandatory claim coverage does not: the live site
+and README make visitor-facing promises that have no `.factory/claims.json`
+entry and no prescribed observable `@claim:` test.
+
+### Defects
+
+- **High:** Unlisted claims include “No account,” installed-voice preview,
+  installed-extension offline behavior, toolbar/`Alt+Shift+S`/context-menu
+  entry, and local per-site cue workflow details. Register/test each or remove
+  the promise.
+- **Medium:** Home/demo/legal pages lack canonical, Open Graph, Twitter-card,
+  and Apple-touch metadata required by the site-structure contract.
+
+### Evidence
+
+- Every exact claim command passes independently; `npm test` is 8/8;
+  typecheck, lint, build, archive validation, and diff check pass. All 36
+  declared Playwright project tests pass in fresh file/project partitions
+  (27 passed, 9 intentional skips).
+- First read and one-click demo pass; the demo saves, resets, discards, and
+  isolates its `demo:` data.
+- Live desktop and 390 px checks found no console/page errors, overflow, or
+  serious/critical axe findings; keyboard focus, reduced motion, and offline
+  PWA reload/update work.
+- Live requests stayed same-origin only; headers are restrictive and cached
+  assets immutable. Home/demo HTML and extracted extension ZIP contents match
+  the candidate build.
+
+See `.factory/verification-6.md` for exact evidence and required retest.
+
+---
+
 # Say It Right — repair 5 handoff
 
 ## Release status
