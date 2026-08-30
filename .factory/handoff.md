@@ -43,10 +43,14 @@ Playwright axe integration found no serious or critical violations.
 
 ## Deploy and live recheck
 
-Pending the release push at the time this file was written. After deployment,
-open `https://pronunciation-cue-reader.sociobot.in` cold and update this
-section with the commit and live result.
+Repair commit `f8a97e7f278f6575ea9c216f75b4d9f4a0b09ba2` was pushed to
+`origin/main` at 2026-08-30 05:35 UTC. The static-host deployment remains
+outside this repository. Cache-busted cold checks through 05:40 UTC still
+returned the preceding artifact (`ETag "56195865"`, last modified 04:06 UTC),
+so live verification must run after that deployment propagates. The local
+release artifact was checked at `/`, `/demo/?demo=1`, `/privacy/`, `/terms/`,
+and `/404.html` before the push.
 
 ## Known gaps
 
-None.
+The external static deployment had not propagated by the final cold check.

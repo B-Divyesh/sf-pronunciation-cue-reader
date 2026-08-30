@@ -23,4 +23,6 @@ the demo CTA uses `/demo/?demo=1`; desktop hero type no longer overlaps the
 illustration at 1440 px. Evidence: `the explicit demo query enters the
 isolated sample reader` and `test-results/polish-1-home-desktop.png`.
 
-Live deployment check is recorded in the handoff after the release push.
+Repair commit `f8a97e7f278f6575ea9c216f75b4d9f4a0b09ba2` is pushed. At the final
+cache-busted cold check (05:40 UTC), the public host still served the prior
+artifact; see `.factory/handoff.md` for the exact ETag and propagation note.
